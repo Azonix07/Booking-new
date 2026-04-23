@@ -43,6 +43,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { FullServiceModule } from './modules/full-service/full-service.module';
 import { TasksModule } from './tasks/tasks.module';
+import { HealthController } from './health.controller';
 
 // Schemas needed by middleware + guards (registered at root level)
 import { Tenant, TenantSchema } from './modules/tenants/schemas/tenant.schema';
@@ -108,6 +109,7 @@ import { Subscription, SubscriptionSchema } from './modules/subscriptions/schema
     FullServiceModule,
     TasksModule,
   ],
+  controllers: [HealthController],
   providers: [
     // ── Global exception filter ───────────────────────────────────────────────
     {

@@ -59,13 +59,13 @@ export function BusinessCard({
             </p>
           )}
 
-          {business.rating != null && business.rating > 0 && (
+          {business.rating?.average > 0 && (
             <div className="flex items-center gap-1.5 mt-2">
               <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
-              <span className="text-sm font-medium">{Number(business.rating).toFixed(1)}</span>
-              {business.reviewCount != null && (
+              <span className="text-sm font-medium">{business.rating.average.toFixed(1)}</span>
+              {business.rating.count > 0 && (
                 <span className="text-xs text-muted-foreground">
-                  ({business.reviewCount})
+                  ({business.rating.count})
                 </span>
               )}
             </div>

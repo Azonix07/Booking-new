@@ -1,7 +1,11 @@
 import type { ApiResponse } from "./types";
 import { safeStorage } from "./utils";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
+// In production (Vercel), use relative URL so requests go through Next.js rewrites (no CORS needed).
+// In development, point directly to the local backend.
+const BASE_URL = typeof window !== "undefined" && process.env.NODE_ENV === "production"
+  ? "/api/v1"
+  : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1");
 const MAX_RETRIES = 2;
 
 class ApiClient {

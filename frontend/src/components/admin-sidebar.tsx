@@ -11,6 +11,7 @@ import {
   LogOut,
   Shield,
   Sparkles,
+  KeyRound,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
@@ -18,6 +19,7 @@ const sidebarItems = [
   { label: "Overview", href: "/admin", icon: LayoutDashboard },
   { label: "Businesses", href: "/admin/tenants", icon: Building2 },
   { label: "Users", href: "/admin/users", icon: Users },
+  { label: "Credentials", href: "/admin/credentials", icon: KeyRound },
   { label: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard },
   { label: "Full-Service", href: "/admin/full-service", icon: Sparkles },
 ];

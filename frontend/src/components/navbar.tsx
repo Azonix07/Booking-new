@@ -4,22 +4,27 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { Search, LogOut, LayoutDashboard, Menu, X } from "lucide-react";
+import { LogOut, LayoutDashboard, Menu, X, MapPin } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { LocationSearch, type PlaceSuggestion } from "@/components/location-search";
 
 const LINKS = [
-  { href: "/marketplace", label: "Explore" },
-  { href: "/marketplace?view=categories", label: "Categories" },
   { href: "/list-your-business", label: "For Business" },
 ];
 
-export function Navbar() {
+interface NavbarProps {
+  onLocationChange?: (place: PlaceSuggestion | null) => void;
+}
+
+export function Navbar({ onLocationChange }: NavbarProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState<PlaceSuggestion | null>(null);
   const pathname = usePathname();
+  const locationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -31,6 +36,36 @@ export function Navbar() {
     setMobileOpen(false);
   }, [pathname]);
 
+  // Listen for clear/focus events from homepage
+  useEffect(() => {
+    const handleClear = () => {
+      setSelectedPlace(null);
+      onLocationChange?.(null);
+    };
+    const handleFocus = () => {
+      locationRef.current?.querySelector("input")?.focus();
+    };
+    window.addEventListener("clear-navbar-location", handleClear);
+    window.addEventListener("focus-navbar-location", handleFocus);
+    return () => {
+      window.removeEventListener("clear-navbar-location", handleClear);
+      window.removeEventListener("focus-navbar-location", handleFocus);
+    };
+  }, [onLocationChange]);
+
+  const handleLocationSelect = (place: PlaceSuggestion) => {
+    setSelectedPlace(place);
+    onLocationChange?.(place);
+    // Also dispatch event for non-prop listeners
+    window.dispatchEvent(new CustomEvent("navbar-location-change", { detail: place }));
+  };
+
+  const handleClearLocation = () => {
+    setSelectedPlace(null);
+    onLocationChange?.(null);
+    window.dispatchEvent(new CustomEvent("navbar-location-change", { detail: null }));
+  };
+
   return (
     <header
       className={cn(
@@ -40,9 +75,9 @@ export function Navbar() {
           : "bg-white/50 backdrop-blur-sm border-b border-transparent",
       )}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:px-6 gap-3">
         {/* Logo */}
-        <Link href="/" className="mr-8 flex items-center group">
+        <Link href="/" className="mr-2 flex items-center shrink-0">
           <Image
             src="/images/brand/Bokingo_small.png"
             alt="Bokingo"
@@ -53,11 +88,35 @@ export function Navbar() {
           <Image
             src="/images/brand/Bokingo_large.png"
             alt="Bokingo"
-            width={140}
-            height={36}
+            width={120}
+            height={32}
             className="hidden sm:block"
           />
         </Link>
+
+        {/* Location search in navbar */}
+        <div ref={locationRef} className="flex-1 max-w-sm hidden md:block">
+          <div className="relative">
+            <LocationSearch
+              value={selectedPlace}
+              onSelect={handleLocationSelect}
+              placeholder="Search location..."
+              size="sm"
+              showCurrentLocation
+              className="w-full"
+            />
+            {selectedPlace && (
+              <button
+                onClick={handleClearLocation}
+                className="absolute right-10 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-muted"
+              >
+                <X className="h-3 w-3 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1 md:flex-none" />
 
         {/* Nav links */}
         <nav className="hidden md:flex items-center gap-1">
@@ -80,16 +139,8 @@ export function Navbar() {
           })}
         </nav>
 
-        <div className="flex-1" />
-
         {/* Right side */}
         <div className="hidden md:flex items-center gap-2">
-          <Link href="/marketplace">
-            <Button variant="ghost" size="icon" aria-label="Search">
-              <Search className="h-4 w-4" />
-            </Button>
-          </Link>
-
           {isAuthenticated ? (
             <>
               {(user?.role === "client_admin" || user?.role === "super_admin") && (
@@ -145,7 +196,17 @@ export function Navbar() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden border-t bg-white">
-          <div className="px-4 py-3 space-y-1">
+          <div className="px-4 py-3 space-y-2">
+            {/* Mobile location search */}
+            <LocationSearch
+              value={selectedPlace}
+              onSelect={(place) => { handleLocationSelect(place); setMobileOpen(false); }}
+              placeholder="Search location..."
+              size="sm"
+              showCurrentLocation
+              className="w-full"
+            />
+
             {LINKS.map((link) => (
               <Link
                 key={link.href}

@@ -1,0 +1,261 @@
+@import "tailwindcss";
+@import "tailwindcss/theme" theme(static);
+@import "tailwindcss/utilities";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --radius: 0.5rem;
+}
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 224 71% 4%;
+  --card: 0 0% 100%;
+  --card-foreground: 224 71% 4%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 71% 4%;
+  --primary: 221 83% 53%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 262 83% 58%;
+  --accent-foreground: 0 0% 100%;
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 224 71% 4%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 221 83% 53%;
+
+  --slot-available: 142 71% 45%;
+  --slot-filling: 38 92% 50%;
+  --slot-full: 0 84% 60%;
+  --slot-blocked: 220 9% 46%;
+  --slot-available-bg: 142 76% 96%;
+  --slot-filling-bg: 38 100% 96%;
+  --slot-full-bg: 0 93% 97%;
+  --slot-blocked-bg: 220 14% 96%;
+  --slot-available-fg: 142 71% 29%;
+  --slot-filling-fg: 32 95% 33%;
+  --slot-full-fg: 0 72% 43%;
+  --slot-blocked-fg: 220 9% 46%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html {
+  color-scheme: light;
+  background-color: hsl(var(--background));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--foreground));
+}
+
+/* ── Utility classes (keep API so existing markup doesn't break) ─────── */
+
+.aurora-bg { background: hsl(var(--background)); }
+.noise { /* no-op */ }
+
+.glass {
+  background: hsl(0 0% 100% / 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--border) / 0.6);
+}
+
+.glass-strong {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+}
+
+.gradient-primary {
+  background: linear-gradient(135deg, hsl(221 83% 53%), hsl(262 83% 58%));
+}
+.gradient-hero {
+  background: linear-gradient(135deg, hsl(221 83% 97%), hsl(262 83% 97%), hsl(0 0% 100%));
+}
+.text-gradient {
+  background: linear-gradient(135deg, hsl(221 83% 53%), hsl(262 83% 58%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.glow-primary { box-shadow: 0 0 20px -5px hsl(221 83% 53% / 0.35); }
+.glow-sm { box-shadow: 0 0 10px -3px hsl(221 83% 53% / 0.25); }
+
+/* Hero mesh gradient */
+.hero-mesh {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -20%, hsl(221 83% 53% / 0.08), transparent),
+    radial-gradient(ellipse 60% 50% at 80% 50%, hsl(262 83% 58% / 0.06), transparent),
+    radial-gradient(ellipse 50% 40% at 20% 80%, hsl(221 83% 53% / 0.04), transparent),
+    linear-gradient(to bottom, hsl(220 20% 97%), hsl(0 0% 100%));
+}
+
+/* Dot pattern overlay */
+.dot-pattern {
+  background-image: radial-gradient(circle, hsl(var(--foreground) / 0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Card lift hover */
+.card-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px -12px rgb(0 0 0 / 0.12), 0 4px 12px -4px rgb(0 0 0 / 0.06);
+}
+
+/* Gradient border effect */
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, hsl(221 83% 53% / 0.3), hsl(262 83% 58% / 0.3), transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.gradient-border:hover::before {
+  opacity: 1;
+}
+
+.sidebar-item-active {
+  background: hsl(var(--primary) / 0.08);
+  color: hsl(var(--primary));
+  font-weight: 500;
+}
+
+.stat-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.stat-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px -8px rgb(0 0 0 / 0.08);
+}
+
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px -6px rgb(0 0 0 / 0.1);
+}
+
+/* ── Animations ──────────────────────────────────────────────────────── */
+
+@keyframes slot-pop {
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes capacity-fill { from { width: 0%; } }
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes live-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes scale-in {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.slot-enter          { animation: slot-pop 0.2s ease-out; }
+.slot-selected       { box-shadow: 0 0 0 2px hsl(var(--primary)); }
+.slot-filling-pulse  { /* no-op in light theme */ }
+.capacity-bar-animate{ animation: capacity-fill 0.5s ease-out; }
+.fade-in-up          { animation: fade-in-up 0.4s ease-out both; }
+.live-indicator      { animation: live-dot 1.6s ease-in-out infinite; }
+.animate-float       { animation: float 4s ease-in-out infinite; }
+.animate-gradient    { background-size: 200% 200%; animation: gradient-shift 6s ease infinite; }
+.animate-aurora      { /* no-op */ }
+.animate-slide-up    { animation: fade-in-up 0.5s ease-out both; }
+.animate-scale-in    { animation: scale-in 0.3s ease-out both; }
+
+.slot-shimmer {
+  background: linear-gradient(90deg, transparent, hsl(var(--muted)), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+.slot-card { transition: box-shadow 0.2s; }
+.slot-card:not(:disabled):hover { box-shadow: 0 2px 8px rgb(0 0 0 / 0.08); }
+
+/* ── Scrollbars ──────────────────────────────────────────────────────── */
+
+.scrollbar-none { scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.custom-scrollbar { scrollbar-width: thin; scrollbar-color: hsl(var(--border)) transparent; }
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
+
+.safe-area-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

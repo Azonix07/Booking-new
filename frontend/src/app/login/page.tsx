@@ -7,7 +7,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, ArrowRight, Eye, EyeOff, Zap } from "lucide-react";
+import { Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -56,11 +57,13 @@ export default function LoginPage() {
         <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-accent/8 blur-3xl" />
         <div className="absolute inset-0 dot-pattern opacity-30" />
 
-        <Link href="/" className="relative inline-flex items-center gap-2.5 w-fit">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary text-white shadow-md shadow-primary/25">
-            <Zap className="h-4.5 w-4.5" strokeWidth={2.5} />
-          </div>
-          <span className="font-bold text-lg">BookAnything</span>
+        <Link href="/" className="relative inline-flex items-center w-fit">
+          <Image
+            src="/images/brand/Bokingo_large.png"
+            alt="Bokingo"
+            width={140}
+            height={36}
+          />
         </Link>
 
         <div className="relative max-w-md">
@@ -83,10 +86,13 @@ export default function LoginPage() {
       <div className="flex flex-1 items-center justify-center px-4 sm:px-8 py-8">
         <div className="w-full max-w-md">
           <div className="lg:hidden flex items-center gap-2.5 mb-10">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary text-white shadow-sm shadow-primary/25">
-              <Zap className="h-4.5 w-4.5" strokeWidth={2.5} />
-            </div>
-            <span className="font-semibold text-lg">BookAnything</span>
+            <Image
+              src="/images/brand/Bokingo_small.png"
+              alt="Bokingo"
+              width={36}
+              height={36}
+            />
+            <span className="font-semibold text-lg">Bokingo</span>
           </div>
 
           <div className="mb-8">

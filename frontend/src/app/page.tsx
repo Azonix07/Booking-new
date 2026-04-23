@@ -2,10 +2,10 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import Image from "next/image";
 import { Navbar } from "@/components/navbar";
 import { Hero } from "@/components/home/hero";
 import { PopularCategories } from "@/components/home/categories";
-import { Zap } from "lucide-react";
 
 const FeaturedBusinesses = dynamic(
   () => import("@/components/home/featured").then((m) => m.FeaturedBusinesses),
@@ -57,11 +57,13 @@ function Footer() {
       <div className="mx-auto max-w-6xl">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-2.5 group">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary text-white shadow-sm shadow-primary/25">
-                <Zap className="h-4 w-4" strokeWidth={2.5} />
-              </div>
-              <span className="font-bold tracking-tight">BookAnything</span>
+            <Link href="/" className="inline-flex items-center group">
+              <Image
+                src="/images/brand/Bokingo_large.png"
+                alt="Bokingo"
+                width={130}
+                height={34}
+              />
             </Link>
             <p className="mt-4 text-sm text-muted-foreground max-w-xs leading-relaxed">
               Book anything, anywhere — instantly. The smartest way to discover
@@ -93,7 +95,7 @@ function Footer() {
           </div>
         </div>
         <div className="mt-12 pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-          <span>&copy; {new Date().getFullYear()} BookAnything. Built with care.</span>
+          <span>&copy; {new Date().getFullYear()} Bokingo. Built with care.</span>
           <span className="flex items-center gap-1">
             Made with <span className="text-red-400">&#9829;</span> in India
           </span>

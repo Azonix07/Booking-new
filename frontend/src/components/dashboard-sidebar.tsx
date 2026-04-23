@@ -6,8 +6,9 @@ import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Globe, Settings, Calendar, Palette, Box, Clock,
-  BarChart3, Star, LogOut, Lock, Zap, ChevronLeft, Menu, type LucideIcon,
+  BarChart3, Star, LogOut, Lock, ChevronLeft, Menu, type LucideIcon,
 } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 
 type SidebarItem = { label: string; href: string; icon: LucideIcon; requiresPlan?: string[] };
@@ -42,9 +43,12 @@ export function DashboardSidebar() {
       <div className={cn("flex items-center h-16 border-b px-4", collapsed ? "justify-center" : "justify-between")}>
         {!collapsed && (
           <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg gradient-primary text-white shadow-sm shadow-primary/25">
-              <Zap className="h-3.5 w-3.5" strokeWidth={2.5} />
-            </div>
+            <Image
+              src="/images/brand/Bokingo_small.png"
+              alt="Bokingo"
+              width={28}
+              height={28}
+            />
             <span className="font-bold text-sm">Dashboard</span>
           </Link>
         )}

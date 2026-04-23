@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { Search, LogOut, LayoutDashboard, Menu, X, Zap } from "lucide-react";
+import { Search, LogOut, LayoutDashboard, Menu, X } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -41,13 +42,21 @@ export function Navbar() {
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:px-6">
         {/* Logo */}
-        <Link href="/" className="mr-8 flex items-center gap-2.5 group">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary text-white shadow-sm shadow-primary/25 group-hover:shadow-md group-hover:shadow-primary/30 transition-shadow">
-            <Zap className="h-4 w-4" strokeWidth={2.5} />
-          </div>
-          <span className="hidden sm:block text-lg font-semibold tracking-tight text-foreground">
-            BookAnything
-          </span>
+        <Link href="/" className="mr-8 flex items-center group">
+          <Image
+            src="/images/brand/Bokingo_small.png"
+            alt="Bokingo"
+            width={36}
+            height={36}
+            className="sm:hidden"
+          />
+          <Image
+            src="/images/brand/Bokingo_large.png"
+            alt="Bokingo"
+            width={140}
+            height={36}
+            className="hidden sm:block"
+          />
         </Link>
 
         {/* Nav links */}

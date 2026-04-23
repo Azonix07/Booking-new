@@ -263,7 +263,7 @@ export default function FullServiceRequestPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-md">
               <MapPin className="h-5 w-5 text-white" />
             </div>
-            <span className="font-bold text-xl">BookingPlatform</span>
+            <span className="font-bold text-xl">Bokingo</span>
           </div>
 
           <div className="space-y-2 mb-8">

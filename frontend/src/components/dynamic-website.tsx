@@ -130,7 +130,7 @@ export function DynamicWebsite({ config, tenant, services }: DynamicWebsiteProps
               <p className="opacity-50">&copy; {new Date().getFullYear()} {tenant.name}. All rights reserved.</p>
             </div>
           ) : (
-            <p>&copy; {new Date().getFullYear()} {tenant.name}. Powered by BookingPlatform.</p>
+            <p>&copy; {new Date().getFullYear()} {tenant.name}. Powered by Bokingo.</p>
           )}
         </footer>
       )}

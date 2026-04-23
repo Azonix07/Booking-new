@@ -6,9 +6,13 @@ import { Providers } from "@/components/providers";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "BookAnything — Book Anything, Instantly",
+  title: "Bokingo — Book Anything, Instantly",
   description:
     "A next-generation booking platform for turfs, gaming lounges, salons, studios and more. Real-time availability. Zero friction.",
+  icons: {
+    icon: "/images/brand/Bokingo_app.png",
+    apple: "/images/brand/Bokingo_app.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

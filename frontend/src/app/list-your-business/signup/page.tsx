@@ -90,7 +90,7 @@ function BusinessSignup() {
         description: description || undefined,
         plan,
       });
-      router.push("/dashboard/setup");
+      router.push("/setup");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Registration failed";
       setError(msg);

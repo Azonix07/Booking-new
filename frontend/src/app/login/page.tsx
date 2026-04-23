@@ -34,7 +34,7 @@ export default function LoginPage() {
         } else if (ob?.subscription?.status === "rejected") {
           router.push("/list-your-business/plans");
         } else if (!ob?.setupCompleted) {
-          router.push("/dashboard/setup");
+          router.push("/setup");
         } else {
           router.push("/dashboard");
         }

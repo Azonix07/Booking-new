@@ -16,11 +16,14 @@ import {
   AlertCircle,
   Loader2,
   Rocket,
+  MapPin,
+  ArrowRight,
 } from "lucide-react";
 
 interface Props {
   data: WizardData;
   onFinalize: () => void;
+  onGoToStep?: (step: number) => void;
   saving: boolean;
 }
 
@@ -28,11 +31,15 @@ function Section({
   icon: Icon,
   title,
   done,
+  stepNumber,
+  onGoToStep,
   children,
 }: {
   icon: any;
   title: string;
   done: boolean;
+  stepNumber?: number;
+  onGoToStep?: (step: number) => void;
   children: React.ReactNode;
 }) {
   return (
@@ -51,7 +58,21 @@ function Section({
                 <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">Not set</Badge>
               )}
             </div>
-            {done ? children : <p className="text-sm text-muted-foreground">Not configured yet</p>}
+            {done ? children : (
+              <div className="flex items-center gap-3">
+                <p className="text-sm text-muted-foreground">Not configured yet</p>
+                {stepNumber && onGoToStep && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    onClick={() => onGoToStep(stepNumber)}
+                  >
+                    Set up <ArrowRight className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
@@ -59,15 +80,16 @@ function Section({
   );
 }
 
-export default function StepReview({ data, onFinalize, saving }: Props) {
+export default function StepReview({ data, onFinalize, onGoToStep, saving }: Props) {
   const sections = [
-    { key: "businessType", done: !!data.businessType },
-    { key: "businessHours", done: !!data.businessHours },
-    { key: "services", done: data.services?.length > 0 },
-    { key: "slotConfig", done: !!data.slotConfig },
-    { key: "pricing", done: data.pricing?.length > 0 },
-    { key: "paymentMethod", done: !!data.paymentMethod },
-    { key: "customerFields", done: !!data.customerFields },
+    { key: "businessType", done: !!data.businessType, step: 1 },
+    { key: "location", done: !!data.location, step: 2 },
+    { key: "businessHours", done: !!data.businessHours, step: 3 },
+    { key: "services", done: data.services?.length > 0, step: 4 },
+    { key: "slotConfig", done: !!data.slotConfig, step: 5 },
+    { key: "pricing", done: data.pricing?.length > 0, step: 6 },
+    { key: "paymentMethod", done: !!data.paymentMethod, step: 7 },
+    { key: "customerFields", done: !!data.customerFields, step: 8 },
   ];
   const doneCount = sections.filter((s) => s.done).length;
   const allDone = doneCount === sections.length;
@@ -98,15 +120,34 @@ export default function StepReview({ data, onFinalize, saving }: Props) {
 
       <div className="space-y-3">
         {/* Business Type */}
-        <Section icon={Building2} title="Business Type" done={!!data.businessType}>
+        <Section icon={Building2} title="Business Type" done={!!data.businessType} stepNumber={1} onGoToStep={onGoToStep}>
           <p className="text-sm capitalize">
             {data.businessType?.category?.replace(/-/g, " ")}
             {data.businessType?.customCategory && ` — ${data.businessType.customCategory}`}
           </p>
         </Section>
 
+        {/* Location */}
+        <Section icon={MapPin} title="Location" done={!!data.location} stepNumber={2} onGoToStep={onGoToStep}>
+          {data.location && (
+            <div className="text-sm space-y-0.5">
+              {data.location.address?.street && <p>{data.location.address.street}</p>}
+              <p>
+                {[data.location.address?.city, data.location.address?.state, data.location.address?.country]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
+              {data.location.coordinates && (
+                <p className="text-muted-foreground text-xs">
+                  {data.location.coordinates.latitude.toFixed(4)}, {data.location.coordinates.longitude.toFixed(4)}
+                </p>
+              )}
+            </div>
+          )}
+        </Section>
+
         {/* Business Hours */}
-        <Section icon={Clock} title="Business Hours" done={!!data.businessHours}>
+        <Section icon={Clock} title="Business Hours" done={!!data.businessHours} stepNumber={3} onGoToStep={onGoToStep}>
           {data.businessHours && (
             <div className="text-sm space-y-0.5">
               {data.businessHours.sameForAllDays ? (
@@ -122,7 +163,7 @@ export default function StepReview({ data, onFinalize, saving }: Props) {
         </Section>
 
         {/* Services */}
-        <Section icon={Gamepad2} title="Services / Devices" done={data.services?.length > 0}>
+        <Section icon={Gamepad2} title="Services / Devices" done={data.services?.length > 0} stepNumber={4} onGoToStep={onGoToStep}>
           <div className="flex flex-wrap gap-1.5">
             {data.services?.map((s: any, i: number) => (
               <Badge key={i} variant="secondary" className="text-xs">
@@ -133,7 +174,7 @@ export default function StepReview({ data, onFinalize, saving }: Props) {
         </Section>
 
         {/* Slot Config */}
-        <Section icon={Timer} title="Slot Configuration" done={!!data.slotConfig}>
+        <Section icon={Timer} title="Slot Configuration" done={!!data.slotConfig} stepNumber={5} onGoToStep={onGoToStep}>
           {data.slotConfig && (
             <p className="text-sm">
               {data.slotConfig.slotDurationMinutes} min slots
@@ -145,7 +186,7 @@ export default function StepReview({ data, onFinalize, saving }: Props) {
         </Section>
 
         {/* Pricing */}
-        <Section icon={DollarSign} title="Pricing" done={data.pricing?.length > 0}>
+        <Section icon={DollarSign} title="Pricing" done={data.pricing?.length > 0} stepNumber={6} onGoToStep={onGoToStep}>
           <div className="text-sm space-y-0.5">
             {data.pricing?.slice(0, 5).map((p: any, i: number) => (
               <p key={i}>
@@ -163,7 +204,7 @@ export default function StepReview({ data, onFinalize, saving }: Props) {
         </Section>
 
         {/* Payment */}
-        <Section icon={CreditCard} title="Payment Method" done={!!data.paymentMethod}>
+        <Section icon={CreditCard} title="Payment Method" done={!!data.paymentMethod} stepNumber={7} onGoToStep={onGoToStep}>
           {data.paymentMethod && (
             <div className="flex gap-2">
               {data.paymentMethod.acceptOnlinePayment && (
@@ -180,7 +221,7 @@ export default function StepReview({ data, onFinalize, saving }: Props) {
         </Section>
 
         {/* Customer Fields */}
-        <Section icon={UserCircle} title="Customer Information" done={!!data.customerFields}>
+        <Section icon={UserCircle} title="Customer Information" done={!!data.customerFields} stepNumber={8} onGoToStep={onGoToStep}>
           {data.customerFields && (
             <div className="flex flex-wrap gap-1.5">
               {data.customerFields.nameRequired && (

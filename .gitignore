@@ -32,3 +32,4 @@ dump.rdb
 
 # Misc
 *.tsbuildinfo
+.claude/

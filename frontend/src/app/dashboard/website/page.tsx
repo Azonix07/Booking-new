@@ -24,6 +24,7 @@ import {
   ExternalLink,
   RefreshCw,
   Pencil,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
 import type { WebsiteConfig, Tenant, SubscriptionPlan } from "@/lib/types";
@@ -63,6 +64,7 @@ export default function WebsitePage() {
   const [selectedDesign, setSelectedDesign] = useState<string>("");
   const [extraPrompt, setExtraPrompt] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   // Load existing config
   useEffect(() => {
@@ -94,10 +96,10 @@ export default function WebsitePage() {
   const generateWebsite = useCallback(async () => {
     setWizardStep("generating");
     setGenerating(true);
+    setGenerateError(null);
     try {
       const isRegenerate = !!config;
       const endpoint = isRegenerate ? "/website/regenerate" : "/website";
-      const method = isRegenerate ? "post" : "post";
 
       const body = isRegenerate
         ? {
@@ -115,7 +117,8 @@ export default function WebsitePage() {
       const result = await api.post<WebsiteConfig>(endpoint, body);
       setConfig(result);
       setWizardStep("preview");
-    } catch {
+    } catch (err: any) {
+      setGenerateError(err?.message || "Failed to generate website. Please try again.");
       setWizardStep("extra-prompt");
     } finally {
       setGenerating(false);
@@ -322,11 +325,21 @@ export default function WebsitePage() {
                 </div>
               </CardContent>
             </Card>
+            {generateError && (
+              <div className="flex items-start gap-3 rounded-xl border-2 border-red-200 bg-red-50 px-4 py-3 text-red-700">
+                <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold">Generation failed</p>
+                  <p className="text-sm opacity-80">{generateError}</p>
+                </div>
+                <button onClick={() => setGenerateError(null)} className="text-red-400 hover:text-red-600 font-bold text-lg leading-none">×</button>
+              </div>
+            )}
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setWizardStep("design-style")}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back
               </Button>
-              <Button onClick={generateWebsite}>
+              <Button onClick={generateWebsite} disabled={generating}>
                 <Wand2 className="mr-2 h-4 w-4" />
                 Generate Website
               </Button>

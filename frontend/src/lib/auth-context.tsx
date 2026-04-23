@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!ob) return "/dashboard";
     if (ob.subscription?.status === "pending") return "/list-your-business/pending";
     if (ob.subscription?.status === "rejected") return "/list-your-business/plans";
-    if (!ob.setupCompleted) return "/dashboard/setup";
+    if (!ob.setupCompleted) return "/setup";
     return "/dashboard";
   }, [user]);
 

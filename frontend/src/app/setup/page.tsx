@@ -152,8 +152,13 @@ export default function SetupWizardPage() {
       await api.post("/setup-wizard/finalize", {});
       // Refresh user state to get updated onboarding status
       await refreshUser();
-      // Route based on whether the subscription is active (free plan) or pending approval
-      const ob = user?.onboarding;
+      // Small delay to let state settle, then use fresh auth check
+      // The refreshUser already updated the user object in context,
+      // but we need to re-read it. Use a simple redirect strategy:
+      // After finalize, if the plan was already active (free plan gets auto-active),
+      // go to dashboard. Otherwise go to pending page.
+      const freshUser = await api.get<any>("/auth/me");
+      const ob = freshUser?.onboarding;
       if (ob?.subscription?.status === "active" && ob.tenantStatus === "active") {
         router.push("/dashboard");
       } else {
@@ -363,6 +368,7 @@ export default function SetupWizardPage() {
               <StepReview
                 data={wizardData}
                 onFinalize={handleFinalize}
+                onGoToStep={goToStep}
                 saving={saving}
               />
             )}

@@ -230,10 +230,10 @@ export default function HomePage() {
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="rounded-3xl bg-white overflow-hidden animate-pulse aspect-[3/4]">
-                  <div className="h-[72%] bg-gray-100 flex items-center justify-center">
+                  <div className="h-[82%] bg-gray-100 flex items-center justify-center">
                     <div className="h-28 w-28 sm:h-32 sm:w-32 rounded-full bg-gray-200" />
                   </div>
-                  <div className="h-[28%] flex flex-col items-center justify-center gap-2">
+                  <div className="h-[18%] flex flex-col items-center justify-center gap-2 bg-gray-50/60">
                     <div className="h-4 bg-gray-100 rounded w-1/2" />
                     <div className="h-3 bg-gray-50 rounded w-1/3" />
                   </div>
@@ -455,12 +455,10 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
           className="absolute inset-0 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-shadow"
           style={{ backfaceVisibility: "hidden" }}
         >
-          {/* Vibrant gradient background fills 60% */}
-          <div className={`relative h-[72%] bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden`}>
+          {/* Vibrant gradient background */}
+          <div className={`relative h-[82%] bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden`}>
             {/* Subtle pattern overlay */}
             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,.2) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
-            {/* Bottom fade to white */}
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent" />
 
             {/* Big circle avatar */}
             {business.branding?.logo ? (
@@ -485,20 +483,20 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
             )}
           </div>
 
-          {/* Name + rating at bottom 38% */}
-          <div className="h-[28%] flex flex-col items-center justify-center px-4 bg-white">
-            <h3 className="font-bold text-sm sm:text-base text-foreground text-center leading-tight line-clamp-2">
+          {/* Name + rating – glass strip */}
+          <div className="h-[18%] flex flex-col items-center justify-center px-4 bg-white/30 backdrop-blur-xl border-t border-white/40">
+            <h3 className="font-bold text-sm sm:text-base text-white text-center leading-tight line-clamp-1 drop-shadow-sm">
               {business.name}
             </h3>
             {business.rating?.average > 0 && (
-              <div className="flex items-center gap-1 mt-2">
-                <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
-                <span className="text-xs font-bold text-foreground">{business.rating.average.toFixed(1)}</span>
-                <span className="text-[10px] text-muted-foreground">· {categoryLabel}</span>
+              <div className="flex items-center gap-1 mt-0.5">
+                <Star className="h-3 w-3 text-amber-300 fill-amber-300" />
+                <span className="text-[11px] font-bold text-white/90">{business.rating.average.toFixed(1)}</span>
+                <span className="text-[10px] text-white/70">· {categoryLabel}</span>
               </div>
             )}
             {!business.rating?.average && categoryLabel && (
-              <p className="text-xs text-muted-foreground capitalize mt-1.5">{categoryLabel}</p>
+              <p className="text-[11px] text-white/70 capitalize mt-0.5">{categoryLabel}</p>
             )}
           </div>
         </div>

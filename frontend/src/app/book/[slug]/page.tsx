@@ -20,6 +20,7 @@ import {
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useRazorpay } from "@/hooks/use-razorpay";
+import { getCoverImage } from "@/lib/category-images";
 import { formatCurrency, formatTime } from "@/lib/utils";
 import type {
   Tenant,
@@ -448,6 +449,51 @@ export default function BookingPage() {
       </div>
 
       <div className="bp-container">
+        {/* Cover image banner */}
+        {tenant && (
+          <div
+            className="relative rounded-3xl overflow-hidden mb-6 shadow-lg"
+            style={{ aspectRatio: "16 / 6", maxHeight: 280 }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={getCoverImage(tenant)}
+              alt={tenant.name}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 flex items-end gap-4">
+              <div
+                className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white/90 backdrop-blur-sm shadow-xl ring-4 ring-white/50 flex items-center justify-center shrink-0 overflow-hidden"
+              >
+                {tenant.branding?.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={tenant.branding.logo}
+                    alt={tenant.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-br from-violet-500 to-indigo-600 bg-clip-text text-transparent">
+                    {tenant.name?.charAt(0)?.toUpperCase() ?? "B"}
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0 pb-1">
+                <h2 className="text-xl sm:text-2xl font-bold text-white drop-shadow-md truncate">
+                  {tenant.name}
+                </h2>
+                {tenant.category && (
+                  <p className="text-xs sm:text-sm text-white/85 capitalize drop-shadow">
+                    {tenant.category.replace(/-/g, " ")}
+                    {tenant.address?.city ? ` · ${tenant.address.city}` : ""}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Hero */}
         <div className="bp-hero">
           <div className="bp-hero-badge">

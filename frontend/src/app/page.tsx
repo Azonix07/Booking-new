@@ -5,13 +5,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
+import { HeroCarousel } from "@/components/home/hero-carousel";
 import { api } from "@/lib/api";
 import type { MarketplaceBusiness } from "@/lib/types";
 import type { PlaceSuggestion } from "@/components/location-search";
+import { getCardImage } from "@/lib/category-images";
 import {
   Gamepad2, Volleyball, Scissors, Dumbbell, Music2, Palette,
   UtensilsCrossed, Camera, Star, MapPin, ArrowRight,
-  SlidersHorizontal, X, Sparkles, Shield, Zap, Clock, Calendar,
+  SlidersHorizontal, X, Shield, Zap, Clock, Calendar,
   TrendingUp, Heart, Instagram, Twitter, Facebook,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,13 +35,6 @@ const SORT_OPTIONS = [
   { key: "rating",   label: "Top Rated" },
   { key: "nearest",  label: "Nearest" },
   { key: "newest",   label: "Newest" },
-];
-
-const TRUST_PILLS = [
-  { icon: Shield,   label: "Secure" },
-  { icon: Zap,      label: "Instant" },
-  { icon: Clock,    label: "24/7" },
-  { icon: Calendar, label: "Real-time" },
 ];
 
 const TRUST_STATS = [
@@ -140,43 +135,8 @@ export default function HomePage() {
       <Navbar onLocationChange={setLocation} />
 
       <main className="min-h-screen bg-gradient-to-b from-white to-gray-50/50">
-        {/* ─── HERO BAND ─────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden">
-          <div className="absolute inset-0 hero-mesh" />
-          <div className="absolute inset-0 dot-pattern opacity-30" />
-          <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-primary/8 blur-3xl animate-float" />
-          <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-accent/8 blur-3xl animate-float" style={{ animationDelay: "2s" }} />
-
-          <div className="relative mx-auto max-w-6xl px-4 sm:px-6 pt-12 pb-10 sm:pt-16 sm:pb-14 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur-md border border-primary/15 px-3.5 py-1.5 text-[11px] font-semibold text-primary mb-5 shadow-sm fade-in-up">
-              <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 live-indicator" />
-              <Sparkles className="h-3 w-3" />
-              Discover · Book · Play
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.05] fade-in-up" style={{ animationDelay: "0.1s" }}>
-              Book anything.{" "}
-              <span className="text-gradient animate-gradient">Instantly.</span>
-            </h1>
-
-            <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed fade-in-up" style={{ animationDelay: "0.2s" }}>
-              Turfs, gaming lounges, salons, studios — real-time slots,
-              zero friction, instant confirmation.
-            </p>
-
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-x-2 gap-y-2 fade-in-up" style={{ animationDelay: "0.3s" }}>
-              {TRUST_PILLS.map(({ icon: Icon, label }) => (
-                <span
-                  key={label}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/60 px-3 py-1.5 text-xs font-medium text-foreground/80 shadow-sm hover:shadow-md hover:border-primary/30 hover:text-foreground transition-all duration-200"
-                >
-                  <Icon className="h-3.5 w-3.5 text-primary" />
-                  {label}
-                </span>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* ─── HERO CAROUSEL (hero + ads + promote) ───────────────────── */}
+        <HeroCarousel />
 
         {/* ─── FILTER BAR ────────────────────────────────────────────────── */}
         <div className="sticky top-16 z-40 bg-white/85 backdrop-blur-xl border-y border-border/40 shadow-[0_1px_12px_-6px_rgba(0,0,0,0.05)]">
@@ -456,6 +416,7 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
 
   const gradientIdx = business.name.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % GRADIENT_SETS.length;
   const gradient = GRADIENT_SETS[gradientIdx];
+  const cardImage = getCardImage(business);
 
   return (
     <div
@@ -474,16 +435,27 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
       >
         {/* ── FRONT FACE ── */}
         <div
-          className={`absolute inset-0 rounded-3xl overflow-hidden shadow-md group-hover:shadow-2xl transition-all duration-300 bg-gradient-to-br ${gradient}`}
+          className="absolute inset-0 rounded-3xl overflow-hidden shadow-md group-hover:shadow-2xl transition-all duration-300 bg-muted"
           style={{ backfaceVisibility: "hidden" }}
         >
-          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,.2) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
+          {/* Cover image */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={cardImage}
+            alt={business.name}
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+          {/* Category-colored tint overlay on top of image */}
+          <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-30 mix-blend-multiply`} />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20" />
 
-          <div className="absolute inset-0 flex items-center justify-center pb-14">
+          {/* Logo or initial badge */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%]">
             {business.branding?.logo ? (
-              <img src={business.branding.logo} alt={business.name} className="h-24 w-24 sm:h-28 sm:w-28 rounded-full object-cover ring-4 ring-white/60 shadow-2xl" />
+              <img src={business.branding.logo} alt={business.name} className="h-20 w-20 sm:h-24 sm:w-24 rounded-full object-cover ring-4 ring-white/70 shadow-2xl" />
             ) : (
-              <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-white/15 backdrop-blur-md text-white flex items-center justify-center text-4xl sm:text-5xl font-bold shadow-2xl ring-4 ring-white/25">
+              <div className={`h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-gradient-to-br ${gradient} text-white flex items-center justify-center text-3xl sm:text-4xl font-bold shadow-2xl ring-4 ring-white/70`}>
                 {initial}
               </div>
             )}
@@ -501,7 +473,7 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
             </div>
           )}
 
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/65 via-black/30 to-transparent px-4 pb-4 pt-10">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-12">
             <h3 className="font-bold text-sm sm:text-base text-white text-center leading-tight line-clamp-2 drop-shadow-md">
               {business.name}
             </h3>

@@ -229,13 +229,13 @@ export default function HomePage() {
             /* Skeleton grid */
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="rounded-3xl bg-white overflow-hidden animate-pulse aspect-[3/4]">
-                  <div className="h-[82%] bg-gray-100 flex items-center justify-center">
-                    <div className="h-28 w-28 sm:h-32 sm:w-32 rounded-full bg-gray-200" />
+                <div key={i} className="rounded-3xl bg-gray-100 overflow-hidden animate-pulse aspect-[3/4] relative">
+                  <div className="absolute inset-0 flex items-center justify-center pb-14">
+                    <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-gray-200" />
                   </div>
-                  <div className="h-[18%] flex flex-col items-center justify-center gap-2 bg-gray-50/60">
-                    <div className="h-4 bg-gray-100 rounded w-1/2" />
-                    <div className="h-3 bg-gray-50 rounded w-1/3" />
+                  <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-8 bg-gradient-to-t from-gray-200/60 to-transparent">
+                    <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto" />
+                    <div className="h-3 bg-gray-200/60 rounded w-1/3 mx-auto mt-2" />
                   </div>
                 </div>
               ))}
@@ -452,51 +452,50 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
       >
         {/* ── FRONT FACE ── */}
         <div
-          className="absolute inset-0 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-shadow"
+          className={`absolute inset-0 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-shadow bg-gradient-to-br ${gradient}`}
           style={{ backfaceVisibility: "hidden" }}
         >
-          {/* Vibrant gradient background */}
-          <div className={`relative h-[82%] bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden`}>
-            {/* Subtle pattern overlay */}
-            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,.2) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
+          {/* Pattern overlay */}
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,.2) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
 
-            {/* Big circle avatar */}
+          {/* Centre avatar */}
+          <div className="absolute inset-0 flex items-center justify-center pb-14">
             {business.branding?.logo ? (
-              <img src={business.branding.logo} alt={business.name} className="relative h-28 w-28 sm:h-32 sm:w-32 rounded-full object-cover ring-[5px] ring-white/80 shadow-2xl" />
+              <img src={business.branding.logo} alt={business.name} className="h-24 w-24 sm:h-28 sm:w-28 rounded-full object-cover ring-4 ring-white/60 shadow-2xl" />
             ) : (
-              <div className="relative h-28 w-28 sm:h-32 sm:w-32 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center text-5xl sm:text-6xl font-bold shadow-2xl ring-[5px] ring-white/30">
+              <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-white/15 backdrop-blur-md text-white flex items-center justify-center text-4xl sm:text-5xl font-bold shadow-2xl ring-4 ring-white/25">
                 {initial}
-              </div>
-            )}
-
-            {/* Badges */}
-            {business.distanceKm != null && (
-              <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 shadow-lg flex items-center gap-1 backdrop-blur-sm">
-                <MapPin className="h-2.5 w-2.5 text-primary" />
-                {business.distanceKm < 1 ? `${Math.round(business.distanceKm * 1000)}m` : `${business.distanceKm.toFixed(1)}km`}
-              </div>
-            )}
-            {business.plan && business.plan !== "free" && (
-              <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 shadow-lg backdrop-blur-sm">
-                {business.plan === "full_service" ? "✨ Premium" : business.plan === "ai" ? "🤖 AI" : "⚡ Pro"}
               </div>
             )}
           </div>
 
-          {/* Name + rating – glass strip */}
-          <div className="h-[18%] flex flex-col items-center justify-center px-4 bg-white/30 backdrop-blur-xl border-t border-white/40">
-            <h3 className="font-bold text-sm sm:text-base text-white text-center leading-tight line-clamp-1 drop-shadow-sm">
+          {/* Badges */}
+          {business.distanceKm != null && (
+            <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 shadow-lg flex items-center gap-1 backdrop-blur-sm">
+              <MapPin className="h-2.5 w-2.5 text-primary" />
+              {business.distanceKm < 1 ? `${Math.round(business.distanceKm * 1000)}m` : `${business.distanceKm.toFixed(1)}km`}
+            </div>
+          )}
+          {business.plan && business.plan !== "free" && (
+            <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 shadow-lg backdrop-blur-sm">
+              {business.plan === "full_service" ? "✨ Premium" : business.plan === "ai" ? "🤖 AI" : "⚡ Pro"}
+            </div>
+          )}
+
+          {/* Bottom fade + name */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent px-4 pb-4 pt-10">
+            <h3 className="font-bold text-sm sm:text-base text-white text-center leading-tight line-clamp-2 drop-shadow-md">
               {business.name}
             </h3>
             {business.rating?.average > 0 && (
-              <div className="flex items-center gap-1 mt-0.5">
+              <div className="flex items-center justify-center gap-1 mt-1">
                 <Star className="h-3 w-3 text-amber-300 fill-amber-300" />
                 <span className="text-[11px] font-bold text-white/90">{business.rating.average.toFixed(1)}</span>
-                <span className="text-[10px] text-white/70">· {categoryLabel}</span>
+                <span className="text-[10px] text-white/60">· {categoryLabel}</span>
               </div>
             )}
             {!business.rating?.average && categoryLabel && (
-              <p className="text-[11px] text-white/70 capitalize mt-0.5">{categoryLabel}</p>
+              <p className="text-[11px] text-white/70 capitalize text-center mt-1">{categoryLabel}</p>
             )}
           </div>
         </div>

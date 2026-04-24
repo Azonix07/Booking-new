@@ -13,7 +13,6 @@ import {
   UtensilsCrossed, Camera, Star, MapPin, Clock, Users, ArrowRight,
   SlidersHorizontal, X,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 // ─── Filter categories ───────────────────────────────────────────────────────
@@ -228,14 +227,15 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
           {loading ? (
             /* Skeleton grid */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="rounded-2xl border bg-white overflow-hidden animate-pulse h-64">
-                  <div className="h-40 bg-gray-100 flex items-center justify-center">
-                    <div className="h-20 w-20 rounded-full bg-gray-200" />
+                <div key={i} className="rounded-3xl bg-white overflow-hidden animate-pulse aspect-[3/4]">
+                  <div className="h-[62%] bg-gray-100 flex items-center justify-center">
+                    <div className="h-28 w-28 sm:h-32 sm:w-32 rounded-full bg-gray-200" />
                   </div>
-                  <div className="flex items-center justify-center h-24">
+                  <div className="h-[38%] flex flex-col items-center justify-center gap-2">
                     <div className="h-4 bg-gray-100 rounded w-1/2" />
+                    <div className="h-3 bg-gray-50 rounded w-1/3" />
                   </div>
                 </div>
               ))}
@@ -303,7 +303,7 @@ export default function HomePage() {
                   <> in <span className="font-medium text-foreground capitalize">{activeCategory.replace(/-/g, " ")}</span></>
                 )}
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {businesses.map((biz) => (
                   <BusinessSlotCard key={biz._id} business={biz} />
                 ))}
@@ -318,7 +318,18 @@ export default function HomePage() {
   );
 }
 
-// ─── Flip card with expand-on-linger ─────────────────────────────────────────
+// ─── Tall portrait flip card ─────────────────────────────────────────────────
+
+const GRADIENT_SETS = [
+  "from-violet-500 via-purple-500 to-indigo-600",
+  "from-rose-500 via-pink-500 to-fuchsia-600",
+  "from-cyan-500 via-teal-500 to-emerald-600",
+  "from-amber-500 via-orange-500 to-red-500",
+  "from-blue-500 via-indigo-500 to-violet-600",
+  "from-emerald-500 via-green-500 to-teal-600",
+  "from-pink-500 via-rose-400 to-orange-500",
+  "from-indigo-500 via-blue-500 to-cyan-500",
+];
 
 function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
   const router = useRouter();
@@ -327,6 +338,10 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
   const [flipped, setFlipped] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const lingerTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Deterministic gradient based on name
+  const gradientIdx = business.name.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % GRADIENT_SETS.length;
+  const gradient = GRADIENT_SETS[gradientIdx];
 
   const handleMouseEnter = () => {
     setFlipped(true);
@@ -339,55 +354,51 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
     setExpanded(false);
   };
 
-  // Expanded overlay (portal-like)
+  // ── Expanded overlay ──
   if (expanded) {
     return (
       <>
-        {/* Placeholder to keep grid space */}
-        <div className="h-64" />
-        {/* Expanded overlay */}
+        <div className="aspect-[3/4]" />
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in p-4"
           onClick={() => { setExpanded(false); setFlipped(false); }}
         >
           <div
-            className="w-[90vw] max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden animate-scale-in"
+            className="w-[92vw] max-w-sm rounded-3xl bg-white shadow-2xl overflow-hidden animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Expanded header */}
-            <div className="relative h-44 bg-gradient-to-br from-primary/10 via-accent/10 to-primary/15 flex items-center justify-center">
-              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(0,0,0,.06) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
+            {/* Expanded gradient header */}
+            <div className={`relative h-52 bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden`}>
+              <div className="absolute inset-0 opacity-15" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,.15) 1px, transparent 0)", backgroundSize: "24px 24px" }} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               {business.branding?.logo ? (
-                <img src={business.branding.logo} alt={business.name} className="h-24 w-24 rounded-full object-cover ring-4 ring-white shadow-xl" />
+                <img src={business.branding.logo} alt={business.name} className="relative h-28 w-28 rounded-full object-cover ring-4 ring-white/80 shadow-2xl" />
               ) : (
-                <div className="h-24 w-24 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center text-4xl font-bold shadow-xl ring-4 ring-white">
+                <div className="relative h-28 w-28 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center text-5xl font-bold shadow-2xl ring-4 ring-white/30">
                   {initial}
                 </div>
               )}
               {business.distanceKm != null && (
-                <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-medium bg-white/90 shadow flex items-center gap-1">
+                <div className="absolute top-3.5 right-3.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 shadow-lg flex items-center gap-1">
                   <MapPin className="h-3 w-3 text-primary" />
                   {business.distanceKm < 1 ? `${Math.round(business.distanceKm * 1000)}m` : `${business.distanceKm.toFixed(1)}km`}
                 </div>
               )}
               {business.plan && business.plan !== "free" && (
-                <div className="absolute top-3 left-3">
-                  <Badge variant="secondary" className={`text-xs ${business.plan === "ai" ? "bg-violet-100 text-violet-700" : business.plan === "full_service" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
-                    {business.plan === "full_service" ? "Premium" : business.plan === "ai" ? "AI" : "Pro"}
-                  </Badge>
+                <div className="absolute top-3.5 left-3.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 shadow-lg">
+                  {business.plan === "full_service" ? "✨ Premium" : business.plan === "ai" ? "🤖 AI" : "⚡ Pro"}
                 </div>
               )}
             </div>
 
-            {/* Expanded body */}
             <div className="p-5 space-y-3">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-lg font-bold">{business.name}</h3>
+                  <h3 className="text-lg font-bold tracking-tight">{business.name}</h3>
                   <p className="text-sm text-muted-foreground capitalize">{categoryLabel}</p>
                 </div>
                 {business.rating?.average > 0 && (
-                  <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg">
+                  <div className="flex items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-xl">
                     <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
                     <span className="text-sm font-bold">{business.rating.average.toFixed(1)}</span>
                     {business.rating.count > 0 && <span className="text-xs text-muted-foreground">({business.rating.count})</span>}
@@ -408,18 +419,14 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
 
               {business.tags && business.tags.length > 0 && (
                 <div className="flex gap-1.5 flex-wrap">
-                  {business.tags.slice(0, 5).map((tag) => (
-                    <span key={tag} className="px-2 py-0.5 rounded-full text-xs bg-primary/5 text-primary font-medium">{tag}</span>
+                  {business.tags.slice(0, 6).map((tag) => (
+                    <span key={tag} className="px-2.5 py-0.5 rounded-full text-xs bg-primary/5 text-primary font-medium">{tag}</span>
                   ))}
                 </div>
               )}
 
-              <Button
-                className="w-full rounded-xl mt-2 gap-2"
-                onClick={() => router.push(`/book/${business.slug}`)}
-              >
-                Book Now
-                <ArrowRight className="h-4 w-4" />
+              <Button className="w-full rounded-xl mt-2 gap-2 h-11" onClick={() => router.push(`/book/${business.slug}`)}>
+                Book Now <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -430,96 +437,111 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
 
   return (
     <div
-      className="flip-card h-64 cursor-pointer"
-      style={{ perspective: "800px" }}
+      className="flip-card aspect-[3/4] cursor-pointer"
+      style={{ perspective: "1000px" }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={() => router.push(`/book/${business.slug}`)}
     >
       <div
-        className="flip-card-inner relative w-full h-full transition-transform duration-500"
+        className="relative w-full h-full transition-transform duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
         style={{
           transformStyle: "preserve-3d",
           transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
         }}
       >
-        {/* ── FRONT ── */}
+        {/* ── FRONT FACE ── */}
         <div
-          className="absolute inset-0 rounded-2xl border bg-white overflow-hidden"
+          className="absolute inset-0 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-shadow"
           style={{ backfaceVisibility: "hidden" }}
         >
-          {/* Top gradient area with circle profile */}
-          <div className="relative h-40 bg-gradient-to-br from-primary/8 via-accent/5 to-primary/12 flex items-center justify-center overflow-hidden">
-            <div className="absolute inset-0 opacity-25" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(0,0,0,.05) 1px, transparent 0)", backgroundSize: "16px 16px" }} />
+          {/* Vibrant gradient background fills 60% */}
+          <div className={`relative h-[62%] bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden`}>
+            {/* Subtle pattern overlay */}
+            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,.2) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
+            {/* Bottom fade to white */}
+            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent" />
 
+            {/* Big circle avatar */}
             {business.branding?.logo ? (
-              <img src={business.branding.logo} alt={business.name} className="h-20 w-20 rounded-full object-cover ring-4 ring-white shadow-lg" />
+              <img src={business.branding.logo} alt={business.name} className="relative h-28 w-28 sm:h-32 sm:w-32 rounded-full object-cover ring-[5px] ring-white/80 shadow-2xl" />
             ) : (
-              <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center text-3xl font-bold shadow-lg shadow-primary/25 ring-4 ring-white">
+              <div className="relative h-28 w-28 sm:h-32 sm:w-32 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center text-5xl sm:text-6xl font-bold shadow-2xl ring-[5px] ring-white/30">
                 {initial}
               </div>
             )}
 
+            {/* Badges */}
             {business.distanceKm != null && (
-              <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/90 shadow-sm flex items-center gap-1 backdrop-blur-sm">
+              <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 shadow-lg flex items-center gap-1 backdrop-blur-sm">
                 <MapPin className="h-2.5 w-2.5 text-primary" />
                 {business.distanceKm < 1 ? `${Math.round(business.distanceKm * 1000)}m` : `${business.distanceKm.toFixed(1)}km`}
               </div>
             )}
-
             {business.plan && business.plan !== "free" && (
-              <div className="absolute top-2.5 left-2.5">
-                <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 ${business.plan === "ai" ? "bg-violet-100 text-violet-700" : business.plan === "full_service" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
-                  {business.plan === "full_service" ? "Premium" : business.plan === "ai" ? "AI" : "Pro"}
-                </Badge>
+              <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 shadow-lg backdrop-blur-sm">
+                {business.plan === "full_service" ? "✨ Premium" : business.plan === "ai" ? "🤖 AI" : "⚡ Pro"}
               </div>
             )}
           </div>
 
-          {/* Name only */}
-          <div className="flex items-center justify-center h-24 px-4">
-            <h3 className="font-semibold text-sm text-foreground text-center line-clamp-2">
+          {/* Name + rating at bottom 38% */}
+          <div className="h-[38%] flex flex-col items-center justify-center px-4 bg-white">
+            <h3 className="font-bold text-sm sm:text-base text-foreground text-center leading-tight line-clamp-2">
               {business.name}
             </h3>
+            {business.rating?.average > 0 && (
+              <div className="flex items-center gap-1 mt-2">
+                <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                <span className="text-xs font-bold text-foreground">{business.rating.average.toFixed(1)}</span>
+                <span className="text-[10px] text-muted-foreground">· {categoryLabel}</span>
+              </div>
+            )}
+            {!business.rating?.average && categoryLabel && (
+              <p className="text-xs text-muted-foreground capitalize mt-1.5">{categoryLabel}</p>
+            )}
           </div>
         </div>
 
-        {/* ── BACK ── */}
+        {/* ── BACK FACE ── */}
         <div
-          className="absolute inset-0 rounded-2xl border bg-white overflow-hidden"
+          className={`absolute inset-0 rounded-3xl overflow-hidden shadow-xl bg-gradient-to-br ${gradient}`}
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
-          <div className="flex flex-col items-center justify-center h-full p-4 text-center gap-2">
-            {/* Small profile */}
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,.2) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
+          <div className="absolute inset-0 bg-black/10" />
+
+          <div className="relative flex flex-col items-center justify-center h-full p-5 text-center gap-2.5">
+            {/* Profile */}
             {business.branding?.logo ? (
-              <img src={business.branding.logo} alt={business.name} className="h-12 w-12 rounded-full object-cover ring-2 ring-primary/20" />
+              <img src={business.branding.logo} alt={business.name} className="h-16 w-16 rounded-full object-cover ring-3 ring-white/50 shadow-xl" />
             ) : (
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center text-lg font-bold">
+              <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center text-2xl font-bold ring-3 ring-white/30 shadow-xl">
                 {initial}
               </div>
             )}
 
-            <h3 className="font-bold text-sm">{business.name}</h3>
+            <h3 className="font-bold text-base text-white drop-shadow-sm">{business.name}</h3>
 
-            <p className="text-xs text-muted-foreground capitalize">{categoryLabel}</p>
+            <p className="text-xs text-white/80 capitalize font-medium">{categoryLabel}</p>
 
             {business.rating?.average > 0 && (
-              <div className="flex items-center gap-1">
-                <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
-                <span className="text-xs font-semibold">{business.rating.average.toFixed(1)}</span>
-                {business.rating.count > 0 && <span className="text-[10px] text-muted-foreground">({business.rating.count})</span>}
+              <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                <Star className="h-3.5 w-3.5 text-amber-300 fill-amber-300" />
+                <span className="text-xs font-bold text-white">{business.rating.average.toFixed(1)}</span>
+                {business.rating.count > 0 && <span className="text-[10px] text-white/70">({business.rating.count})</span>}
               </div>
             )}
 
             {business.address?.city && (
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+              <p className="text-xs text-white/80 flex items-center gap-1">
                 <MapPin className="h-3 w-3" />
-                {business.address.city}
+                {business.address.city}{business.address.state ? `, ${business.address.state}` : ""}
               </p>
             )}
 
-            <div className="mt-1 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium flex items-center gap-1">
-              Book Now <ArrowRight className="h-3 w-3" />
+            <div className="mt-2 px-5 py-2 rounded-full bg-white text-foreground text-xs font-bold flex items-center gap-1.5 shadow-lg hover:scale-105 transition-transform">
+              Book Now <ArrowRight className="h-3.5 w-3.5" />
             </div>
           </div>
         </div>

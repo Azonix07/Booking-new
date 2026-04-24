@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, Loader2, Plus, Trash2, Users } from "lucide-react";
+import { DollarSign, Loader2, Plus, Trash2, Users, ArrowRight, Info } from "lucide-react";
 
 interface DurationOption {
   minutes: number;
@@ -39,7 +39,13 @@ interface Props {
   saving: boolean;
 }
 
-const CURRENCIES = ["INR", "USD", "EUR", "GBP", "AED"];
+const CURRENCIES = [
+  { code: "INR", symbol: "₹" },
+  { code: "USD", symbol: "$" },
+  { code: "EUR", symbol: "€" },
+  { code: "GBP", symbol: "£" },
+  { code: "AED", symbol: "د.إ" },
+];
 const DURATION_OPTIONS = [
   { minutes: 30, label: "30 min" },
   { minutes: 60, label: "1 hr" },
@@ -59,15 +65,15 @@ export default function StepPricing({ data, services, onSave, saving }: Props) {
   const [currency, setCurrency] = useState("INR");
   const [servicePricings, setServicePricings] = useState<ServicePricing[]>([]);
 
+  const currencySymbol = CURRENCIES.find((c) => c.code === currency)?.symbol || currency;
+
   useEffect(() => {
-    // Try to restore from saved data
     if (data?.length && data[0]?.durationTiers) {
       setServicePricings(data);
       if (data[0]?.currency) setCurrency(data[0].currency);
       return;
     }
 
-    // Initialize from services with sensible defaults
     const initial: ServicePricing[] = services.map((s) => {
       const maxP = s.maxPlayersPerDevice || 1;
       const playerPrices = Array.from({ length: maxP }, (_, i) => ({
@@ -165,8 +171,6 @@ export default function StepPricing({ data, services, onSave, saving }: Props) {
   };
 
   const handleContinue = () => {
-    // Transform to backend-expected format:
-    // { serviceName, basePrice, pricePerAdditionalPerson, currency, durationOptions }
     const transformed = servicePricings.map((sp) => {
       const baseTier = sp.durationTiers[0];
       const basePrice = baseTier?.playerPrices[0]?.price || 0;
@@ -187,7 +191,6 @@ export default function StepPricing({ data, services, onSave, saving }: Props) {
         pricePerAdditionalPerson: Math.max(0, perAdditional),
         currency,
         durationOptions,
-        // Keep full player pricing data for reload
         durationTiers: sp.durationTiers,
         maxPlayers: sp.maxPlayers,
       };
@@ -195,26 +198,32 @@ export default function StepPricing({ data, services, onSave, saving }: Props) {
     onSave(transformed);
   };
 
+  const allFilled = servicePricings.every((sp) =>
+    sp.durationTiers.every((dt) => dt.playerPrices.some((pp) => pp.price > 0)),
+  );
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Set your pricing</h2>
-        <p className="text-muted-foreground mt-1">
-          Configure prices per player count and time duration for each service
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Set your prices</h2>
+        <p className="text-muted-foreground mt-1.5">
+          Price per booking. Add duration tiers if you charge more for longer sessions.
         </p>
       </div>
 
-      {/* Currency selector */}
-      <div className="flex items-center gap-3">
-        <DollarSign className="h-5 w-5 text-primary" />
-        <Label className="font-semibold">Currency</Label>
+      {/* Currency */}
+      <div className="rounded-xl border border-border bg-muted/30 p-3 flex items-center gap-3">
+        <DollarSign className="h-4 w-4 text-primary" />
+        <Label className="text-sm font-semibold">Currency</Label>
         <Select value={currency} onValueChange={setCurrency}>
-          <SelectTrigger className="w-28">
+          <SelectTrigger className="w-32 ml-auto">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {CURRENCIES.map((c) => (
-              <SelectItem key={c} value={c}>{c}</SelectItem>
+              <SelectItem key={c.code} value={c.code}>
+                {c.symbol} {c.code}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -222,43 +231,48 @@ export default function StepPricing({ data, services, onSave, saving }: Props) {
 
       {/* Per-service pricing */}
       {servicePricings.map((sp, sIdx) => (
-        <Card key={sIdx}>
+        <Card key={sIdx} className="border-2 border-border/60">
           <CardContent className="pt-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="font-semibold text-lg">{sp.serviceName}</p>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <p className="font-bold text-base">{sp.serviceName}</p>
               {sp.maxPlayers > 1 && (
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full flex items-center gap-1">
+                <span className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full flex items-center gap-1">
                   <Users className="h-3 w-3" />
-                  Up to {sp.maxPlayers} players
+                  Up to {sp.maxPlayers} people
                 </span>
               )}
             </div>
 
+            {sp.maxPlayers > 1 && (
+              <div className="flex items-start gap-2 text-xs text-muted-foreground bg-primary/5 border border-primary/15 rounded-lg px-3 py-2">
+                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
+                <span>Set a price for each number of players. Example: 1 player = ₹300, 2 players = ₹500.</span>
+              </div>
+            )}
+
             {sp.durationTiers.map((tier, tIdx) => (
-              <div key={tIdx} className="border rounded-lg p-4 space-y-3 bg-muted/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Select
-                      value={String(tier.minutes)}
-                      onValueChange={(v) => updateTierDuration(sIdx, tIdx, parseInt(v))}
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DURATION_OPTIONS.map((d) => (
-                          <SelectItem key={d.minutes} value={String(d.minutes)}>
-                            {d.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+              <div key={tIdx} className="border rounded-xl p-3 sm:p-4 space-y-3 bg-muted/20">
+                <div className="flex items-center justify-between gap-2">
+                  <Select
+                    value={String(tier.minutes)}
+                    onValueChange={(v) => updateTierDuration(sIdx, tIdx, parseInt(v))}
+                  >
+                    <SelectTrigger className="w-32 h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DURATION_OPTIONS.map((d) => (
+                        <SelectItem key={d.minutes} value={String(d.minutes)}>
+                          {d.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {sp.durationTiers.length > 1 && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-destructive hover:text-destructive"
+                      className="text-muted-foreground hover:text-destructive hover:bg-destructive/5 h-9 px-2"
                       onClick={() => removeDurationTier(sIdx, tIdx)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -266,22 +280,28 @@ export default function StepPricing({ data, services, onSave, saving }: Props) {
                   )}
                 </div>
 
-                {/* Player pricing grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {/* Player pricing — stacked on mobile */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {tier.playerPrices.map((pp, pIdx) => (
                     <div key={pIdx}>
-                      <Label className="text-xs text-muted-foreground">
+                      <Label className="text-xs text-muted-foreground mb-1 block">
                         {sp.maxPlayers === 1
-                          ? `Price (${currency})`
-                          : `${pp.players} player${pp.players > 1 ? "s" : ""} (${currency})`}
+                          ? "Price"
+                          : `${pp.players} player${pp.players > 1 ? "s" : ""}`}
                       </Label>
-                      <Input
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="0"
-                        value={pp.price === 0 ? "" : pp.price}
-                        onChange={(e) => updatePlayerPrice(sIdx, tIdx, pIdx, e.target.value)}
-                      />
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                          {currencySymbol}
+                        </span>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="0"
+                          value={pp.price === 0 ? "" : pp.price}
+                          onChange={(e) => updatePlayerPrice(sIdx, tIdx, pIdx, e.target.value)}
+                          className="pl-8"
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -293,10 +313,10 @@ export default function StepPricing({ data, services, onSave, saving }: Props) {
                 variant="outline"
                 size="sm"
                 onClick={() => addDurationTier(sIdx)}
-                className="w-full"
+                className="w-full border-dashed gap-2"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add duration tier
+                <Plus className="h-4 w-4" />
+                Add another duration (e.g. 2 hr pricing)
               </Button>
             )}
           </CardContent>
@@ -306,15 +326,22 @@ export default function StepPricing({ data, services, onSave, saving }: Props) {
       {services.length === 0 && (
         <Card className="border-dashed">
           <CardContent className="pt-4 text-center text-muted-foreground">
-            No services added yet. Go back and add services first.
+            No services added yet. Go back to the previous step and add a few.
           </CardContent>
         </Card>
       )}
 
-      <div className="flex justify-end">
-        <Button onClick={handleContinue} disabled={saving} size="lg">
-          {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-          Continue
+      <div className="flex items-center justify-between pt-2">
+        <p className="text-xs text-muted-foreground">
+          {allFilled ? "Prices set — ready to continue" : "Set at least one price to continue"}
+        </p>
+        <Button
+          onClick={handleContinue}
+          disabled={saving || services.length === 0}
+          size="lg"
+          className="gap-1.5 rounded-xl shadow-md shadow-primary/20 hover:shadow-primary/30"
+        >
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Continue <ArrowRight className="h-4 w-4" /></>}
         </Button>
       </div>
     </div>

@@ -1,6 +1,5 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { WizardData } from "@/app/setup/page";
@@ -17,7 +16,7 @@ import {
   Loader2,
   Rocket,
   MapPin,
-  ArrowRight,
+  Pencil,
 } from "lucide-react";
 
 interface Props {
@@ -43,40 +42,47 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <Card className={!done ? "border-dashed opacity-60" : ""}>
-      <CardContent className="pt-4">
-        <div className="flex items-start gap-3">
-          <div className={`mt-0.5 ${done ? "text-primary" : "text-muted-foreground"}`}>
-            <Icon className="h-5 w-5" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <p className="font-semibold">{title}</p>
+    <div
+      className={`rounded-xl border bg-background p-4 transition-colors ${
+        done ? "border-border" : "border-amber-200 bg-amber-50/50 dark:border-amber-900/50 dark:bg-amber-950/20"
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <div className={`flex h-9 w-9 items-center justify-center rounded-lg shrink-0 ${
+          done ? "bg-primary/10 text-primary" : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+        }`}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2 mb-1.5">
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-sm">{title}</p>
               {done ? (
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />
               ) : (
-                <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">Not set</Badge>
+                <Badge variant="outline" className="text-[10px] text-amber-700 border-amber-300 dark:text-amber-300 dark:border-amber-800 h-4 px-1.5">
+                  Not set
+                </Badge>
               )}
             </div>
-            {done ? children : (
-              <div className="flex items-center gap-3">
-                <p className="text-sm text-muted-foreground">Not configured yet</p>
-                {stepNumber && onGoToStep && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs gap-1"
-                    onClick={() => onGoToStep(stepNumber)}
-                  >
-                    Set up <ArrowRight className="h-3 w-3" />
-                  </Button>
-                )}
-              </div>
+            {stepNumber && onGoToStep && (
+              <button
+                onClick={() => onGoToStep(stepNumber)}
+                className="text-xs font-medium text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors shrink-0"
+              >
+                <Pencil className="h-3 w-3" />
+                {done ? "Edit" : "Set up"}
+              </button>
             )}
           </div>
+          {done ? (
+            <div className="text-sm">{children}</div>
+          ) : (
+            <p className="text-xs text-muted-foreground">Not configured yet — click &quot;Set up&quot; to add this.</p>
+          )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -93,44 +99,67 @@ export default function StepReview({ data, onFinalize, onGoToStep, saving }: Pro
   ];
   const doneCount = sections.filter((s) => s.done).length;
   const allDone = doneCount === sections.length;
+  const missingCount = sections.length - doneCount;
+  const firstMissing = sections.find((s) => !s.done);
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Review & Create</h2>
-        <p className="text-muted-foreground mt-1">
-          Review your configuration before launching your booking website
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Review &amp; launch</h2>
+        <p className="text-muted-foreground mt-1.5">
+          Give everything a quick look. Tap Edit to tweak any section.
         </p>
       </div>
 
-      {/* Completion badge */}
-      <div className={`flex items-center gap-3 p-4 rounded-lg border ${allDone ? "bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800" : "bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800"}`}>
+      {/* Completion banner */}
+      <div
+        className={`flex items-start gap-3 p-4 rounded-xl border ${
+          allDone
+            ? "bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 dark:from-green-950/30 dark:to-emerald-950/30 dark:border-green-800"
+            : "bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800"
+        }`}
+      >
         {allDone ? (
-          <CheckCircle2 className="h-6 w-6 text-green-600" />
+          <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
         ) : (
-          <AlertCircle className="h-6 w-6 text-amber-600" />
+          <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
         )}
-        <div>
-          <p className="font-semibold">{allDone ? "All steps completed!" : `${doneCount} of ${sections.length} steps completed`}</p>
-          <p className="text-sm text-muted-foreground">
-            {allDone ? "Your booking website is ready to launch" : "Complete all steps to launch your website"}
+        <div className="flex-1">
+          <p className="font-bold text-base">
+            {allDone
+              ? "All set — ready to launch!"
+              : `${missingCount} step${missingCount !== 1 ? "s" : ""} left before launch`}
           </p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {allDone
+              ? "Your booking page is ready. Hit Launch below."
+              : "Complete the highlighted sections below to enable launch."}
+          </p>
+          {!allDone && firstMissing && onGoToStep && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3 gap-1.5"
+              onClick={() => onGoToStep(firstMissing.step)}
+            >
+              Finish step {firstMissing.step}
+              <Pencil className="h-3 w-3" />
+            </Button>
+          )}
         </div>
       </div>
 
-      <div className="space-y-3">
-        {/* Business Type */}
+      <div className="space-y-2.5">
         <Section icon={Building2} title="Business Type" done={!!data.businessType} stepNumber={1} onGoToStep={onGoToStep}>
-          <p className="text-sm capitalize">
+          <p className="capitalize">
             {data.businessType?.category?.replace(/-/g, " ")}
             {data.businessType?.customCategory && ` — ${data.businessType.customCategory}`}
           </p>
         </Section>
 
-        {/* Location */}
         <Section icon={MapPin} title="Location" done={!!data.location} stepNumber={2} onGoToStep={onGoToStep}>
           {data.location && (
-            <div className="text-sm space-y-0.5">
+            <div className="space-y-0.5">
               {data.location.address?.street && <p>{data.location.address.street}</p>}
               <p>
                 {[data.location.address?.city, data.location.address?.state, data.location.address?.country]
@@ -146,23 +175,17 @@ export default function StepReview({ data, onFinalize, onGoToStep, saving }: Pro
           )}
         </Section>
 
-        {/* Business Hours */}
         <Section icon={Clock} title="Business Hours" done={!!data.businessHours} stepNumber={3} onGoToStep={onGoToStep}>
           {data.businessHours && (
-            <div className="text-sm space-y-0.5">
-              {data.businessHours.sameForAllDays ? (
-                <p>Same timing for all open days</p>
-              ) : (
-                <p>Custom hours per day</p>
-              )}
-              <p className="text-muted-foreground">
-                {data.businessHours.hours?.filter((h: any) => !h.closed).length || 0} days open per week
+            <div className="space-y-0.5">
+              <p>{data.businessHours.sameForAllDays ? "Same hours every open day" : "Different hours per day"}</p>
+              <p className="text-muted-foreground text-xs">
+                Open {data.businessHours.hours?.filter((h: any) => !h.isClosed).length || 0} days a week
               </p>
             </div>
           )}
         </Section>
 
-        {/* Services */}
         <Section icon={Gamepad2} title="Services / Devices" done={data.services?.length > 0} stepNumber={4} onGoToStep={onGoToStep}>
           <div className="flex flex-wrap gap-1.5">
             {data.services?.map((s: any, i: number) => (
@@ -173,45 +196,39 @@ export default function StepReview({ data, onFinalize, onGoToStep, saving }: Pro
           </div>
         </Section>
 
-        {/* Slot Config */}
         <Section icon={Timer} title="Slot Configuration" done={!!data.slotConfig} stepNumber={5} onGoToStep={onGoToStep}>
           {data.slotConfig && (
-            <p className="text-sm">
-              {data.slotConfig.slotDurationMinutes} min slots
-              ・{data.slotConfig.minBookingNoticeHours}h notice
-              ・{data.slotConfig.maxAdvanceBookingDays}d advance
-              {data.slotConfig.allowWalkIns && " ・Walk-ins OK"}
+            <p>
+              {data.slotConfig.slotDurationMinutes}-min slots · {data.slotConfig.minBookingNoticeHours}h notice · up to {data.slotConfig.maxAdvanceBookingDays}d ahead
+              {data.slotConfig.allowWalkIns && " · walk-ins OK"}
             </p>
           )}
         </Section>
 
-        {/* Pricing */}
         <Section icon={DollarSign} title="Pricing" done={data.pricing?.length > 0} stepNumber={6} onGoToStep={onGoToStep}>
-          <div className="text-sm space-y-0.5">
+          <div className="space-y-0.5">
             {data.pricing?.slice(0, 5).map((p: any, i: number) => (
               <p key={i}>
                 {p.serviceName}: {p.currency} {p.basePrice}
                 {p.durationOptions?.length > 0 && (
-                  <> ({p.durationOptions.map((d: any) => d.label).join(", ")})</>
+                  <> <span className="text-muted-foreground">({p.durationOptions.map((d: any) => d.label).join(", ")})</span></>
                 )}
-                {(p.pricePerAdditionalPerson || 0) > 0 && ` (+${p.pricePerAdditionalPerson}/person)`}
               </p>
             ))}
             {data.pricing?.length > 5 && (
-              <p className="text-muted-foreground">+{data.pricing.length - 5} more</p>
+              <p className="text-muted-foreground text-xs">+{data.pricing.length - 5} more</p>
             )}
           </div>
         </Section>
 
-        {/* Payment */}
         <Section icon={CreditCard} title="Payment Method" done={!!data.paymentMethod} stepNumber={7} onGoToStep={onGoToStep}>
           {data.paymentMethod && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {data.paymentMethod.acceptOnlinePayment && (
                 <Badge variant="secondary" className="text-xs">Online</Badge>
               )}
               {data.paymentMethod.acceptPayAtShop && (
-                <Badge variant="secondary" className="text-xs">Pay at Shop</Badge>
+                <Badge variant="secondary" className="text-xs">Pay at shop</Badge>
               )}
               {data.paymentMethod.showPriceBeforeBooking && (
                 <Badge variant="outline" className="text-xs">Prices visible</Badge>
@@ -220,22 +237,15 @@ export default function StepReview({ data, onFinalize, onGoToStep, saving }: Pro
           )}
         </Section>
 
-        {/* Customer Fields */}
         <Section icon={UserCircle} title="Customer Information" done={!!data.customerFields} stepNumber={8} onGoToStep={onGoToStep}>
           {data.customerFields && (
             <div className="flex flex-wrap gap-1.5">
-              {data.customerFields.nameRequired && (
-                <Badge variant="secondary" className="text-xs">Name</Badge>
-              )}
-              {data.customerFields.phoneRequired && (
-                <Badge variant="secondary" className="text-xs">Phone</Badge>
-              )}
-              {data.customerFields.emailRequired && (
-                <Badge variant="secondary" className="text-xs">Email</Badge>
-              )}
+              {data.customerFields.nameRequired && <Badge variant="secondary" className="text-xs">Name</Badge>}
+              {data.customerFields.phoneRequired && <Badge variant="secondary" className="text-xs">Phone</Badge>}
+              {data.customerFields.emailRequired && <Badge variant="secondary" className="text-xs">Email</Badge>}
               {data.customerFields.customFields?.map((cf: any, i: number) => (
                 <Badge key={i} variant="outline" className="text-xs">
-                  {cf.label} {cf.required && "*"}
+                  {cf.label}{cf.required && " *"}
                 </Badge>
               ))}
             </div>
@@ -244,23 +254,22 @@ export default function StepReview({ data, onFinalize, onGoToStep, saving }: Pro
       </div>
 
       {/* Launch button */}
-      <div className="pt-4">
+      <div className="pt-2">
         <Button
           onClick={onFinalize}
           disabled={!allDone || saving}
           size="lg"
-          className="w-full h-14 text-lg gap-2"
+          className="w-full h-14 text-base gap-2 rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30"
         >
           {saving ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <><Loader2 className="h-5 w-5 animate-spin" /> Launching your site...</>
           ) : (
-            <Rocket className="h-5 w-5" />
+            <><Rocket className="h-5 w-5" /> {allDone ? "Launch booking website" : `Finish ${missingCount} more step${missingCount !== 1 ? "s" : ""} to launch`}</>
           )}
-          {saving ? "Creating your website..." : "Launch Booking Website"}
         </Button>
-        {!allDone && (
-          <p className="text-sm text-muted-foreground text-center mt-2">
-            Complete all steps above to enable launch
+        {allDone && (
+          <p className="text-xs text-muted-foreground text-center mt-3">
+            You can edit anything from your dashboard after launch.
           </p>
         )}
       </div>

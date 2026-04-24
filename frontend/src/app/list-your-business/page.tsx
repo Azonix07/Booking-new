@@ -91,6 +91,12 @@ export default function ListYourBusinessPage() {
                 SEO-optimized website — there&apos;s a plan built for where you
                 are today.
               </p>
+              <div className="mt-5 inline-flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                  ~10
+                </span>
+                <span>Minute setup · Guided in 9 short steps · Save and return anytime</span>
+              </div>
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <a href="#plans">
                   <Button

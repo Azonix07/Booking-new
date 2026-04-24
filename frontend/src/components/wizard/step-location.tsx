@@ -10,8 +10,9 @@ import {
   Link2,
   Navigation,
   Loader2,
-  CheckCircle,
+  CheckCircle2,
   AlertCircle,
+  ArrowRight,
 } from "lucide-react";
 
 interface LocationData {
@@ -73,7 +74,7 @@ export default function StepLocation({ data, onSave, saving }: StepLocationProps
       }>("/location/parse-gmap", { url: gmapUrl.trim() });
 
       if (!result?.coordinates) {
-        setGmapError("Could not parse this Google Maps link. Try a different URL format.");
+        setGmapError("We couldn't read that link. Try copying the URL again from Google Maps.");
         return;
       }
 
@@ -96,7 +97,7 @@ export default function StepLocation({ data, onSave, saving }: StepLocationProps
         });
       }
     } catch {
-      setGmapError("Failed to parse Google Maps URL. Please check the link.");
+      setGmapError("Couldn't reach the location service. Please try searching above instead.");
     } finally {
       setGmapParsing(false);
     }
@@ -121,27 +122,30 @@ export default function StepLocation({ data, onSave, saving }: StepLocationProps
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Business Location</h2>
-        <p className="text-muted-foreground mt-1">
-          Set your business location so customers can find you. Search by place name or paste a Google Maps link.
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Where are you located?</h2>
+        <p className="text-muted-foreground mt-1.5">
+          Customers will use this to find you. Search below or paste a Google Maps link.
         </p>
       </div>
 
       {/* Method 1: Search by place */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-          <MapPin className="h-4 w-4 text-primary" />
-          Search your location
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary text-xs font-bold">1</div>
+          Search for your place
         </div>
         <LocationSearch
           value={selectedPlace}
           onSelect={handlePlaceSelect}
-          placeholder="Type your city, area, or landmark..."
+          placeholder="Type your business name, area, or landmark..."
           size="lg"
           showCurrentLocation
         />
+        <p className="text-xs text-muted-foreground pl-8">
+          Tip: Business name works best. Try &quot;Blue Tokai, Bandra&quot; or &quot;Cyber Hub, Gurgaon&quot;.
+        </p>
       </div>
 
       {/* Divider */}
@@ -149,81 +153,85 @@ export default function StepLocation({ data, onSave, saving }: StepLocationProps
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-border" />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-3 text-muted-foreground font-medium">or</span>
+        <div className="relative flex justify-center">
+          <span className="bg-background px-3 text-xs uppercase tracking-wider text-muted-foreground font-medium">or</span>
         </div>
       </div>
 
       {/* Method 2: Paste Google Maps link */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-          <Link2 className="h-4 w-4 text-primary" />
-          Paste Google Maps link
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary text-xs font-bold">2</div>
+          Paste a Google Maps link
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Input
             value={gmapUrl}
             onChange={(e) => { setGmapUrl(e.target.value); setGmapError(""); }}
             placeholder="https://maps.google.com/..."
             className="flex-1"
+            onKeyDown={(e) => { if (e.key === "Enter" && gmapUrl.trim()) handleGmapPaste(); }}
           />
           <Button
             onClick={handleGmapPaste}
             disabled={!gmapUrl.trim() || gmapParsing}
             variant="outline"
-            className="shrink-0"
+            className="shrink-0 gap-1.5"
           >
-            {gmapParsing ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Navigation className="h-4 w-4 mr-1.5" />}
-            {gmapParsing ? "Parsing..." : "Fetch Location"}
+            {gmapParsing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
+            {gmapParsing ? "Finding..." : "Use this link"}
           </Button>
         </div>
-        {gmapError && (
-          <p className="text-sm text-destructive flex items-center gap-1.5">
-            <AlertCircle className="h-3.5 w-3.5" />
+        {gmapError ? (
+          <p className="text-xs text-destructive flex items-center gap-1.5 pl-8">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
             {gmapError}
           </p>
+        ) : (
+          <p className="text-xs text-muted-foreground pl-8">
+            Open Google Maps → find your place → copy the URL from the address bar.
+          </p>
         )}
-        <p className="text-xs text-muted-foreground">
-          Open Google Maps → Find your business → Copy the URL from the address bar and paste it here.
-        </p>
       </div>
 
       {/* Location preview */}
       {selectedPlace && (
-        <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-5 space-y-4">
+        <div className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5 p-5 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-              <CheckCircle className="h-5 w-5 text-primary" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-md shadow-primary/30">
+              <CheckCircle2 className="h-5 w-5" />
             </div>
-            <div>
-              <p className="font-semibold">{selectedPlace.displayName}</p>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Coordinates: {selectedPlace.latitude.toFixed(6)}, {selectedPlace.longitude.toFixed(6)}
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium text-primary uppercase tracking-wide">Location set</p>
+              <p className="font-semibold truncate">{selectedPlace.displayName}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {selectedPlace.latitude.toFixed(5)}, {selectedPlace.longitude.toFixed(5)}
               </p>
             </div>
           </div>
 
-          {/* Optional street address and zip */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-primary/10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-primary/10">
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                Street Address (optional)
+              <label className="text-xs font-medium text-foreground mb-1 flex items-center gap-1.5">
+                Street address
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-normal">Optional</span>
               </label>
               <Input
                 value={street}
                 onChange={(e) => setStreet(e.target.value)}
-                placeholder="e.g., 123 MG Road"
+                placeholder="123 MG Road, Near Metro"
                 className="bg-background"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                ZIP / PIN Code (optional)
+              <label className="text-xs font-medium text-foreground mb-1 flex items-center gap-1.5">
+                ZIP / PIN code
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-normal">Optional</span>
               </label>
               <Input
                 value={zip}
                 onChange={(e) => setZip(e.target.value)}
-                placeholder="e.g., 680664"
+                placeholder="560001"
                 className="bg-background"
               />
             </div>
@@ -231,22 +239,16 @@ export default function StepLocation({ data, onSave, saving }: StepLocationProps
         </div>
       )}
 
-      {/* Save button */}
       <Button
         onClick={handleSave}
         disabled={!selectedPlace || saving}
-        className="w-full rounded-xl h-12 bg-primary border-0 text-white"
+        size="lg"
+        className="w-full rounded-xl gap-1.5 shadow-md shadow-primary/20 hover:shadow-primary/30"
       >
         {saving ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            Saving...
-          </>
+          <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>
         ) : (
-          <>
-            Continue
-            <MapPin className="h-4 w-4 ml-2" />
-          </>
+          <>Continue <ArrowRight className="h-4 w-4" /></>
         )}
       </Button>
     </div>

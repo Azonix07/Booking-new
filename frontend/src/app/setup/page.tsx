@@ -6,7 +6,24 @@ import { useAuth } from "@/lib/auth-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Loader2, MapPin, Check } from "lucide-react";
+import {
+  ChevronLeft,
+  Loader2,
+  Check,
+  Save,
+  Sparkles,
+  AlertCircle,
+  X,
+  Building2,
+  MapPin,
+  Clock,
+  Gamepad2,
+  Timer,
+  DollarSign,
+  CreditCard,
+  UserCircle,
+  Rocket,
+} from "lucide-react";
 
 import StepBusinessType from "@/components/wizard/step-business-type";
 import StepLocation from "@/components/wizard/step-location";
@@ -19,16 +36,24 @@ import StepCustomerFields from "@/components/wizard/step-customer-fields";
 import StepReview from "@/components/wizard/step-review";
 
 const STEPS = [
-  { id: 1, label: "Business Type", key: "business_type" },
-  { id: 2, label: "Location", key: "location" },
-  { id: 3, label: "Business Hours", key: "business_hours" },
-  { id: 4, label: "Services", key: "services" },
-  { id: 5, label: "Slot Config", key: "slot_config" },
-  { id: 6, label: "Pricing", key: "pricing" },
-  { id: 7, label: "Payment", key: "payment_method" },
-  { id: 8, label: "Customer Info", key: "customer_fields" },
-  { id: 9, label: "Review", key: "review_create" },
+  { id: 1, label: "Business", fullLabel: "Business Type", key: "business_type", icon: Building2, estMin: 1 },
+  { id: 2, label: "Location", fullLabel: "Location", key: "location", icon: MapPin, estMin: 1 },
+  { id: 3, label: "Hours", fullLabel: "Business Hours", key: "business_hours", icon: Clock, estMin: 1 },
+  { id: 4, label: "Services", fullLabel: "Services", key: "services", icon: Gamepad2, estMin: 2 },
+  { id: 5, label: "Slots", fullLabel: "Slot Config", key: "slot_config", icon: Timer, estMin: 1 },
+  { id: 6, label: "Pricing", fullLabel: "Pricing", key: "pricing", icon: DollarSign, estMin: 2 },
+  { id: 7, label: "Payment", fullLabel: "Payment", key: "payment_method", icon: CreditCard, estMin: 1 },
+  { id: 8, label: "Customer", fullLabel: "Customer Info", key: "customer_fields", icon: UserCircle, estMin: 1 },
+  { id: 9, label: "Review", fullLabel: "Review & Launch", key: "review_create", icon: Rocket, estMin: 1 },
 ];
+
+const ENCOURAGEMENT: Record<number, string> = {
+  3: "Nice — you're getting through this fast.",
+  5: "Halfway there. Keep going!",
+  7: "Almost done — just a couple more steps.",
+  8: "Last setup step before launch!",
+  9: "Final step. Review everything and launch your site.",
+};
 
 export interface WizardData {
   businessType: { category: string; customCategory?: string } | null;
@@ -49,7 +74,9 @@ export default function SetupWizardPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [savedToast, setSavedToast] = useState<string | null>(null);
   const [direction, setDirection] = useState(1);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [wizardData, setWizardData] = useState<WizardData>({
     businessType: null,
     location: null,
@@ -66,7 +93,6 @@ export default function SetupWizardPage() {
     if (authLoading) return;
     if (!isAuthenticated) { router.push("/login"); return; }
     if (user?.role !== "client_admin") { router.push("/"); return; }
-    // Setup already completed — route based on subscription + tenant status
     const ob = user?.onboarding;
     if (ob?.setupCompleted) {
       if (!ob.subscription || ob.subscription.status === "rejected") {
@@ -112,6 +138,13 @@ export default function SetupWizardPage() {
     load();
   }, [authLoading, isAuthenticated, user, router]);
 
+  // Toast auto-dismiss
+  useEffect(() => {
+    if (!savedToast) return;
+    const t = setTimeout(() => setSavedToast(null), 2500);
+    return () => clearTimeout(t);
+  }, [savedToast]);
+
   const goToStep = (step: number) => {
     setError(null);
     setDirection(step > currentStep ? 1 : -1);
@@ -132,9 +165,11 @@ export default function SetupWizardPage() {
     try {
       await api.put(endpoint, data);
       const stepKey = STEPS[currentStep - 1].key;
+      const stepLabel = STEPS[currentStep - 1].fullLabel;
       if (!completedSteps.includes(stepKey)) {
         setCompletedSteps((prev) => [...prev, stepKey]);
       }
+      setSavedToast(`${stepLabel} saved`);
       return true;
     } catch (err: any) {
       const msg = err?.message || "Failed to save. Please try again.";
@@ -150,13 +185,7 @@ export default function SetupWizardPage() {
     setError(null);
     try {
       await api.post("/setup-wizard/finalize", {});
-      // Refresh user state to get updated onboarding status
       await refreshUser();
-      // Small delay to let state settle, then use fresh auth check
-      // The refreshUser already updated the user object in context,
-      // but we need to re-read it. Use a simple redirect strategy:
-      // After finalize, if the plan was already active (free plan gets auto-active),
-      // go to dashboard. Otherwise go to pending page.
       const freshUser = await api.get<any>("/auth/me");
       const ob = freshUser?.onboarding;
       if (ob?.subscription?.status === "active" && ob.tenantStatus === "active") {
@@ -184,76 +213,139 @@ export default function SetupWizardPage() {
     );
   }
 
+  const completedCount = completedSteps.length;
+  const percent = Math.round((completedCount / STEPS.length) * 100);
+  const remainingMin = STEPS.slice(currentStep - 1).reduce((sum, s) => sum + s.estMin, 0);
+  const CurrentIcon = STEPS[currentStep - 1].icon;
+
   return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Progress bar */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/40">
+    <div className="min-h-screen bg-gradient-to-b from-muted/30 via-background to-muted/20">
+      {/* Sticky progress header */}
+      <div className="sticky top-0 z-20 bg-background/85 backdrop-blur-xl border-b border-border/40 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white">
-                <MapPin className="h-4 w-4 text-white" />
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-white shadow-md shadow-primary/20 shrink-0">
+                <CurrentIcon className="h-4 w-4" />
               </div>
-              <h1 className="text-lg font-bold">Setup Your Business</h1>
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-lg font-bold leading-tight truncate">
+                  Step {currentStep} · {STEPS[currentStep - 1].fullLabel}
+                </h1>
+                <p className="text-[11px] sm:text-xs text-muted-foreground">
+                  {completedCount} of {STEPS.length} done · ~{remainingMin} min left
+                </p>
+              </div>
             </div>
-            <span className="text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
-              Step {currentStep} of {STEPS.length}
-            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                {percent}%
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowExitConfirm(true)}
+                className="text-xs text-muted-foreground hover:text-foreground gap-1.5 h-8 px-2.5"
+              >
+                <Save className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Save & exit</span>
+                <span className="sm:hidden">Exit</span>
+              </Button>
+            </div>
           </div>
 
-          {/* Step indicators */}
-          <div className="flex items-center gap-1.5">
-            {STEPS.map((step) => {
-              const isCompleted = completedSteps.includes(step.key);
-              const isCurrent = currentStep === step.id;
-              return (
-                <button
-                  key={step.id}
-                  onClick={() => goToStep(step.id)}
-                  className="flex-1 group"
-                >
-                  <div
-                    className={`h-2 rounded-full transition-all ${
-                      isCompleted
-                        ? "bg-primary"
-                        : isCurrent
-                          ? "bg-primary/50"
-                          : "bg-muted-foreground/15"
-                    }`}
-                  />
-                  <span
-                    className={`text-[10px] mt-1.5 block text-center transition-colors ${
-                      isCurrent
-                        ? "text-primary font-semibold"
-                        : isCompleted
-                          ? "text-primary/70 font-medium"
-                          : "text-muted-foreground/60"
-                    }`}
+          {/* Progress bar with completion fill */}
+          <div className="relative">
+            <div className="h-1.5 rounded-full bg-muted-foreground/10 overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
+                initial={false}
+                animate={{ width: `${percent}%` }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              />
+            </div>
+
+            {/* Step dots */}
+            <div className="flex items-center justify-between mt-3">
+              {STEPS.map((step) => {
+                const isCompleted = completedSteps.includes(step.key);
+                const isCurrent = currentStep === step.id;
+                const StepIcon = step.icon;
+                return (
+                  <button
+                    key={step.id}
+                    onClick={() => goToStep(step.id)}
+                    className="group flex flex-col items-center gap-1 flex-1 min-w-0"
+                    aria-label={`Go to step ${step.id}: ${step.fullLabel}`}
                   >
-                    {step.label}
-                  </span>
-                </button>
-              );
-            })}
+                    <div
+                      className={`relative flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full transition-all ${
+                        isCompleted
+                          ? "bg-primary text-white shadow-sm shadow-primary/30"
+                          : isCurrent
+                            ? "bg-primary/15 text-primary ring-2 ring-primary"
+                            : "bg-muted text-muted-foreground/60 group-hover:bg-muted-foreground/20"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      ) : (
+                        <StepIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      )}
+                    </div>
+                    <span
+                      className={`text-[9px] sm:text-[11px] font-medium transition-colors hidden sm:block truncate max-w-full ${
+                        isCurrent
+                          ? "text-primary"
+                          : isCompleted
+                            ? "text-foreground"
+                            : "text-muted-foreground/70"
+                      }`}
+                    >
+                      {step.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Step content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24">
+        {/* Encouragement */}
+        {ENCOURAGEMENT[currentStep] && (
+          <motion.div
+            key={`enc-${currentStep}`}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-5 flex items-center gap-2 text-sm text-primary/90 font-medium"
+          >
+            <Sparkles className="h-4 w-4" />
+            {ENCOURAGEMENT[currentStep]}
+          </motion.div>
+        )}
+
         {/* Error banner */}
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 flex items-start gap-3 rounded-xl border-2 border-red-200 bg-red-50 px-4 py-3 text-red-700"
+            className="mb-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800 dark:bg-red-950/30 dark:border-red-900 dark:text-red-200"
           >
-            <span className="mt-0.5 text-lg">⚠️</span>
+            <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="text-sm font-semibold">Something went wrong</p>
-              <p className="text-sm opacity-80">{error}</p>
+              <p className="text-sm font-semibold">Couldn&apos;t save your progress</p>
+              <p className="text-sm opacity-90">{error}</p>
             </div>
-            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600 font-bold text-lg leading-none">×</button>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-400 hover:text-red-700 transition-colors p-1"
+              aria-label="Dismiss error"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </motion.div>
         )}
 
@@ -328,7 +420,6 @@ export default function SetupWizardPage() {
                 services={wizardData.services}
                 onSave={async (data) => {
                   setWizardData((prev) => ({ ...prev, pricing: data }));
-                  // Strip frontend-only fields before sending to backend
                   const backendPricing = data.map((p: any) => ({
                     serviceName: p.serviceName,
                     basePrice: p.basePrice,
@@ -375,20 +466,87 @@ export default function SetupWizardPage() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation */}
-        <div className="flex justify-between mt-8 pt-6 border-t border-border/60">
-          <Button variant="outline" onClick={prevStep} disabled={currentStep === 1} className="rounded-xl gap-1.5">
-            <ChevronLeft className="h-4 w-4" />
-            Back
-          </Button>
-          {currentStep < 9 && (
-            <Button variant="ghost" onClick={nextStep} className="text-muted-foreground rounded-xl gap-1.5">
-              Skip for now
-              <ChevronRight className="h-4 w-4" />
+        {/* Bottom nav — only Back; primary action is inside each step */}
+        {currentStep > 1 && (
+          <div className="flex justify-start mt-8 pt-6 border-t border-border/60">
+            <Button
+              variant="ghost"
+              onClick={prevStep}
+              className="rounded-xl gap-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Back
             </Button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
+
+      {/* Save toast */}
+      <AnimatePresence>
+        {savedToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 30, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 320, damping: 26 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 rounded-full bg-foreground text-background px-4 py-2.5 shadow-xl shadow-foreground/20 text-sm font-medium"
+          >
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500">
+              <Check className="h-3 w-3 text-white" />
+            </div>
+            {savedToast}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Save & exit confirmation */}
+      <AnimatePresence>
+        {showExitConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+            onClick={() => setShowExitConfirm(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-background rounded-2xl shadow-2xl max-w-sm w-full p-6"
+            >
+              <div className="flex items-start gap-3 mb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50 dark:bg-green-950/30 shrink-0">
+                  <Save className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base">Your progress is saved</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Everything you&apos;ve filled in is safe. You can come back anytime to finish — we&apos;ll pick up right where you left off.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-5">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowExitConfirm(false)}
+                  className="flex-1"
+                >
+                  Keep going
+                </Button>
+                <Button
+                  onClick={() => router.push("/")}
+                  className="flex-1"
+                >
+                  Exit setup
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

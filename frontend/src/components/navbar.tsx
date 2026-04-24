@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { LogOut, LayoutDashboard, Menu, X, MapPin, Search } from "lucide-react";
+import { LogOut, LayoutDashboard, Menu, X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -69,13 +69,13 @@ export function Navbar({ onLocationChange }: NavbarProps) {
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-300",
         scrolled
-          ? "bg-white/85 backdrop-blur-xl shadow-[0_1px_20px_-8px_rgba(0,0,0,0.08)] border-b border-border/50"
-          : "bg-white/60 backdrop-blur-md border-b border-transparent",
+          ? "bg-white/90 backdrop-blur-xl shadow-[0_1px_20px_-8px_rgba(0,0,0,0.08)] border-b border-border/50"
+          : "bg-white/70 backdrop-blur-md border-b border-transparent",
       )}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:px-6 gap-3">
-        {/* Logo with subtle hover glow */}
-        <Link href="/" className="group mr-1 flex items-center shrink-0 relative">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+        {/* LEFT: Logo only */}
+        <Link href="/" className="group flex items-center shrink-0 relative">
           <span className="absolute inset-0 -m-2 rounded-xl bg-gradient-to-r from-primary/0 via-primary/5 to-accent/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-md" />
           <Image
             src="/images/brand/Bokingo_small.png"
@@ -95,74 +95,73 @@ export function Navbar({ onLocationChange }: NavbarProps) {
           />
         </Link>
 
-        {/* Location search — refined pill */}
-        <div ref={locationRef} className="flex-1 max-w-md hidden md:block">
-          <div className="relative group">
-            <LocationSearch
-              value={selectedPlace}
-              onSelect={handleLocationSelect}
-              placeholder="Search location..."
-              size="sm"
-              showCurrentLocation
-              className="w-full"
-            />
-            {selectedPlace && (
-              <button
-                onClick={handleClearLocation}
-                className="absolute right-10 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-muted transition-colors"
-                aria-label="Clear location"
-              >
-                <X className="h-3 w-3 text-muted-foreground" />
-              </button>
-            )}
+        {/* RIGHT: Everything — location, nav, auth — pushed to the right */}
+        <div className="hidden md:flex items-center gap-3">
+          {/* Compact location pill */}
+          <div ref={locationRef} className="w-56 lg:w-64">
+            <div className="relative group">
+              <LocationSearch
+                value={selectedPlace}
+                onSelect={handleLocationSelect}
+                placeholder="Location..."
+                size="sm"
+                showCurrentLocation
+                className="w-full"
+              />
+              {selectedPlace && (
+                <button
+                  onClick={handleClearLocation}
+                  className="absolute right-10 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-muted transition-colors"
+                  aria-label="Clear location"
+                >
+                  <X className="h-3 w-3 text-muted-foreground" />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="flex-1 md:flex-none" />
+          {/* Divider */}
+          <span className="h-6 w-px bg-border/60" />
 
-        {/* Nav links */}
-        <nav className="hidden md:flex items-center gap-1">
-          {LINKS.map((link) => {
-            const active = pathname === link.href.split("?")[0];
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "relative px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                  active
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {link.label}
-                {active && (
-                  <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-gradient-to-r from-primary to-accent" />
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+          {/* Nav links */}
+          <nav className="flex items-center gap-1">
+            {LINKS.map((link) => {
+              const active = pathname === link.href.split("?")[0];
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "relative px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                    active
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {link.label}
+                  {active && (
+                    <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-gradient-to-r from-primary to-accent" />
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
 
-        {/* Right side */}
-        <div className="hidden md:flex items-center gap-2">
+          {/* Auth area */}
           {isAuthenticated ? (
-            <>
+            <div className="flex items-center gap-2 pl-2 ml-1 border-l border-border/60">
               {(user?.role === "client_admin" || user?.role === "super_admin") && (
                 <Link href={user.role === "super_admin" ? "/admin" : "/dashboard"}>
-                  <Button variant="outline" size="sm" className="gap-2 rounded-lg">
+                  <Button variant="outline" size="sm" className="gap-2 rounded-lg h-9">
                     <LayoutDashboard className="h-4 w-4" />
                     Dashboard
                   </Button>
                 </Link>
               )}
-              <div className="flex items-center gap-2 ml-1 pl-3 border-l border-border/60">
+              <div className="flex items-center gap-2">
                 <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-white text-sm font-semibold shadow-md shadow-primary/20 ring-2 ring-white">
                   {user?.name?.charAt(0)?.toUpperCase()}
                 </div>
-                <span className="text-sm font-medium hidden lg:inline max-w-[120px] truncate">
-                  {user?.name}
-                </span>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -173,16 +172,16 @@ export function Navbar({ onLocationChange }: NavbarProps) {
                   <LogOut className="h-4 w-4" />
                 </Button>
               </div>
-            </>
+            </div>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 pl-1">
               <Link href="/login">
-                <Button variant="ghost" size="sm" className="text-foreground hover:text-primary">
+                <Button variant="ghost" size="sm" className="text-foreground hover:text-primary h-9">
                   Login
                 </Button>
               </Link>
               <Link href="/register">
-                <Button size="sm" className="rounded-lg shadow-md shadow-primary/20 hover:shadow-primary/30">
+                <Button size="sm" className="rounded-lg shadow-md shadow-primary/20 hover:shadow-primary/30 h-9 px-4">
                   Get Started
                 </Button>
               </Link>

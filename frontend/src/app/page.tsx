@@ -10,6 +10,7 @@ import { api } from "@/lib/api";
 import type { MarketplaceBusiness } from "@/lib/types";
 import type { PlaceSuggestion } from "@/components/location-search";
 import { getCardImage } from "@/lib/category-images";
+import { cn } from "@/lib/utils";
 import {
   Gamepad2, Volleyball, Scissors, Dumbbell, Music2, Palette,
   UtensilsCrossed, Camera, Star, MapPin, ArrowRight,
@@ -266,15 +267,16 @@ export default function HomePage() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="rounded-3xl bg-gray-100 overflow-hidden animate-pulse aspect-[3/4] relative">
-                  <div className="absolute inset-0 flex items-center justify-center pb-14">
-                    <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-gray-200" />
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-8 bg-gradient-to-t from-gray-200/60 to-transparent">
-                    <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto" />
-                    <div className="h-3 bg-gray-200/60 rounded w-1/3 mx-auto mt-2" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="rounded-2xl bg-white border border-border/60 overflow-hidden animate-pulse">
+                  <div className="aspect-[5/3] bg-gray-200" />
+                  <div className="p-3 flex items-start gap-2.5">
+                    <div className="h-11 w-11 rounded-xl bg-gray-200 -mt-7 ring-3 ring-white" />
+                    <div className="flex-1 pt-0.5 space-y-1.5">
+                      <div className="h-3 w-3/4 rounded bg-gray-200" />
+                      <div className="h-2.5 w-1/2 rounded bg-gray-100" />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -333,7 +335,7 @@ export default function HomePage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {businesses.map((biz, i) => (
                 <div key={biz._id} className="fade-in-up" style={{ animationDelay: `${Math.min(i * 0.04, 0.4)}s` }}>
                   <BusinessSlotCard business={biz} />
@@ -395,141 +397,121 @@ export default function HomePage() {
   );
 }
 
-// ─── Tall portrait flip card ─────────────────────────────────────────────────
+// ─── Business card — brand-forward, single face, compact ─────────────────────
 
-const GRADIENT_SETS = [
-  "from-violet-500 via-purple-500 to-indigo-600",
-  "from-rose-500 via-pink-500 to-fuchsia-600",
-  "from-cyan-500 via-teal-500 to-emerald-600",
-  "from-amber-500 via-orange-500 to-red-500",
-  "from-blue-500 via-indigo-500 to-violet-600",
-  "from-emerald-500 via-green-500 to-teal-600",
-  "from-pink-500 via-rose-400 to-orange-500",
-  "from-indigo-500 via-blue-500 to-cyan-500",
+const ACCENT_SETS = [
+  "from-violet-500 to-indigo-600",
+  "from-rose-500 to-fuchsia-600",
+  "from-cyan-500 to-teal-600",
+  "from-amber-500 to-orange-600",
+  "from-blue-500 to-violet-600",
+  "from-emerald-500 to-teal-600",
+  "from-pink-500 to-rose-600",
+  "from-indigo-500 to-cyan-500",
 ];
 
 function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
   const router = useRouter();
   const initial = business.name?.charAt(0)?.toUpperCase() || "B";
   const categoryLabel = business.category?.replace(/-/g, " ") || "";
-  const [flipped, setFlipped] = useState(false);
 
-  const gradientIdx = business.name.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % GRADIENT_SETS.length;
-  const gradient = GRADIENT_SETS[gradientIdx];
+  const accentIdx = business.name.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % ACCENT_SETS.length;
+  const accent = ACCENT_SETS[accentIdx];
   const cardImage = getCardImage(business);
+
+  const isPremium = business.plan === "full_service";
+  const planLabel =
+    business.plan === "full_service" ? "Premium"
+      : business.plan === "ai" ? "AI"
+      : business.plan === "standard" ? "Pro"
+      : null;
 
   return (
     <div
-      className="flip-card aspect-[3/4] cursor-pointer group"
-      style={{ perspective: "1000px" }}
-      onMouseEnter={() => setFlipped(true)}
-      onMouseLeave={() => setFlipped(false)}
       onClick={() => router.push(`/book/${business.slug}`)}
+      className="group cursor-pointer rounded-2xl bg-white border border-border/60 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-primary/30 transition-all duration-300"
     >
-      <div
-        className="relative w-full h-full transition-transform duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
-        style={{
-          transformStyle: "preserve-3d",
-          transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-        }}
-      >
-        {/* ── FRONT FACE ── */}
-        <div
-          className="absolute inset-0 rounded-3xl overflow-hidden shadow-md group-hover:shadow-2xl transition-all duration-300 bg-muted"
-          style={{ backfaceVisibility: "hidden" }}
-        >
-          {/* Cover image */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={cardImage}
-            alt={business.name}
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
-          {/* Category-colored tint overlay on top of image */}
-          <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-30 mix-blend-multiply`} />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20" />
+      {/* Cover image band */}
+      <div className="relative aspect-[5/3] overflow-hidden bg-muted">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={cardImage}
+          alt={business.name}
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          loading="lazy"
+        />
+        {/* Subtle darken for badge legibility */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/5" />
 
-          {/* Logo or initial badge */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%]">
+        {/* Top-left plan badge */}
+        {planLabel && (
+          <div className={cn(
+            "absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full text-[10px] font-bold backdrop-blur-md shadow-sm",
+            isPremium
+              ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white"
+              : "bg-white/90 text-foreground"
+          )}>
+            {isPremium && "✨ "}{planLabel}
+          </div>
+        )}
+
+        {/* Top-right distance */}
+        {business.distanceKm != null && (
+          <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 shadow-sm flex items-center gap-0.5 backdrop-blur-md">
+            <MapPin className="h-2.5 w-2.5 text-primary" />
+            {business.distanceKm < 1 ? `${Math.round(business.distanceKm * 1000)}m` : `${business.distanceKm.toFixed(1)}km`}
+          </div>
+        )}
+
+        {/* Favorite icon — future */}
+        <button
+          onClick={(e) => e.stopPropagation()}
+          aria-label="Favorite"
+          className="absolute bottom-2.5 right-2.5 h-8 w-8 rounded-full bg-white/90 backdrop-blur-md shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:scale-110"
+        >
+          <Heart className="h-4 w-4 text-rose-500" />
+        </button>
+      </div>
+
+      {/* Info row — brand-focused */}
+      <div className="p-3 sm:p-3.5">
+        <div className="flex items-start gap-2.5">
+          {/* Logo square (not circle — looks more like a brand mark) */}
+          <div className="shrink-0 -mt-7 relative">
             {business.branding?.logo ? (
-              <img src={business.branding.logo} alt={business.name} className="h-20 w-20 sm:h-24 sm:w-24 rounded-full object-cover ring-4 ring-white/70 shadow-2xl" />
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={business.branding.logo}
+                alt={business.name}
+                className="h-11 w-11 sm:h-12 sm:w-12 rounded-xl object-cover ring-3 ring-white shadow-md bg-white"
+              />
             ) : (
-              <div className={`h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-gradient-to-br ${gradient} text-white flex items-center justify-center text-3xl sm:text-4xl font-bold shadow-2xl ring-4 ring-white/70`}>
+              <div className={cn(
+                "h-11 w-11 sm:h-12 sm:w-12 rounded-xl flex items-center justify-center text-white text-base sm:text-lg font-bold ring-3 ring-white shadow-md bg-gradient-to-br",
+                accent
+              )}>
                 {initial}
               </div>
             )}
           </div>
 
-          {business.distanceKm != null && (
-            <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 shadow-lg flex items-center gap-1 backdrop-blur-sm">
-              <MapPin className="h-2.5 w-2.5 text-primary" />
-              {business.distanceKm < 1 ? `${Math.round(business.distanceKm * 1000)}m` : `${business.distanceKm.toFixed(1)}km`}
-            </div>
-          )}
-          {business.plan && business.plan !== "free" && (
-            <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 shadow-lg backdrop-blur-sm">
-              {business.plan === "full_service" ? "✨ Premium" : business.plan === "ai" ? "🤖 AI" : "⚡ Pro"}
-            </div>
-          )}
-
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-12">
-            <h3 className="font-bold text-sm sm:text-base text-white text-center leading-tight line-clamp-2 drop-shadow-md">
+          <div className="min-w-0 flex-1 pt-0.5">
+            <h3 className="font-bold text-sm sm:text-[15px] text-foreground leading-tight truncate group-hover:text-primary transition-colors">
               {business.name}
             </h3>
-            {business.rating?.average > 0 && (
-              <div className="flex items-center justify-center gap-1 mt-1">
-                <Star className="h-3 w-3 text-amber-300 fill-amber-300" />
-                <span className="text-[11px] font-bold text-white/95">{business.rating.average.toFixed(1)}</span>
-                <span className="text-[10px] text-white/70">· {categoryLabel}</span>
-              </div>
-            )}
-            {!business.rating?.average && categoryLabel && (
-              <p className="text-[11px] text-white/75 capitalize text-center mt-1">{categoryLabel}</p>
-            )}
+            <p className="mt-0.5 text-[11px] sm:text-xs text-muted-foreground capitalize truncate">
+              {categoryLabel}
+              {business.address?.city ? ` · ${business.address.city}` : ""}
+            </p>
           </div>
-        </div>
 
-        {/* ── BACK FACE ── */}
-        <div
-          className={`absolute inset-0 rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br ${gradient}`}
-          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-        >
-          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,.2) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
-          <div className="absolute inset-0 bg-black/15" />
-
-          <div className="relative flex flex-col items-center justify-center h-full p-5 text-center gap-2.5">
-            {business.branding?.logo ? (
-              <img src={business.branding.logo} alt={business.name} className="h-16 w-16 rounded-full object-cover ring-3 ring-white/50 shadow-xl" />
-            ) : (
-              <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center text-2xl font-bold ring-3 ring-white/30 shadow-xl">
-                {initial}
-              </div>
-            )}
-
-            <h3 className="font-bold text-base text-white drop-shadow-sm">{business.name}</h3>
-
-            <p className="text-xs text-white/85 capitalize font-medium">{categoryLabel}</p>
-
-            {business.rating?.average > 0 && (
-              <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
-                <Star className="h-3.5 w-3.5 text-amber-300 fill-amber-300" />
-                <span className="text-xs font-bold text-white">{business.rating.average.toFixed(1)}</span>
-                {business.rating.count > 0 && <span className="text-[10px] text-white/80">({business.rating.count})</span>}
-              </div>
-            )}
-
-            {business.address?.city && (
-              <p className="text-xs text-white/85 flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
-                {business.address.city}{business.address.state ? `, ${business.address.state}` : ""}
-              </p>
-            )}
-
-            <div className="mt-2 px-5 py-2 rounded-full bg-white text-foreground text-xs font-bold flex items-center gap-1.5 shadow-lg group-hover:scale-105 transition-transform">
-              Book Now <ArrowRight className="h-3.5 w-3.5" />
+          {/* Rating chip on right */}
+          {business.rating?.average > 0 && (
+            <div className="shrink-0 flex items-center gap-0.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-md px-1.5 py-0.5 text-[11px] font-bold">
+              <Star className="h-2.5 w-2.5 fill-emerald-600 text-emerald-600" />
+              {business.rating.average.toFixed(1)}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

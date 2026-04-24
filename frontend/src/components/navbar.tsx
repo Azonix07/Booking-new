@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { LogOut, LayoutDashboard, Menu, X, MapPin } from "lucide-react";
+import { LogOut, LayoutDashboard, Menu, X, MapPin, Search } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,6 @@ export function Navbar({ onLocationChange }: NavbarProps) {
     setMobileOpen(false);
   }, [pathname]);
 
-  // Listen for clear/focus events from homepage
   useEffect(() => {
     const handleClear = () => {
       setSelectedPlace(null);
@@ -56,7 +55,6 @@ export function Navbar({ onLocationChange }: NavbarProps) {
   const handleLocationSelect = (place: PlaceSuggestion) => {
     setSelectedPlace(place);
     onLocationChange?.(place);
-    // Also dispatch event for non-prop listeners
     window.dispatchEvent(new CustomEvent("navbar-location-change", { detail: place }));
   };
 
@@ -71,32 +69,35 @@ export function Navbar({ onLocationChange }: NavbarProps) {
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-300",
         scrolled
-          ? "bg-white/80 backdrop-blur-xl shadow-sm border-b border-border/60"
-          : "bg-white/50 backdrop-blur-sm border-b border-transparent",
+          ? "bg-white/85 backdrop-blur-xl shadow-[0_1px_20px_-8px_rgba(0,0,0,0.08)] border-b border-border/50"
+          : "bg-white/60 backdrop-blur-md border-b border-transparent",
       )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:px-6 gap-3">
-        {/* Logo */}
-        <Link href="/" className="mr-2 flex items-center shrink-0">
+        {/* Logo with subtle hover glow */}
+        <Link href="/" className="group mr-1 flex items-center shrink-0 relative">
+          <span className="absolute inset-0 -m-2 rounded-xl bg-gradient-to-r from-primary/0 via-primary/5 to-accent/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-md" />
           <Image
             src="/images/brand/Bokingo_small.png"
             alt="Bokingo"
             width={36}
             height={36}
-            className="sm:hidden"
+            className="sm:hidden relative"
+            priority
           />
           <Image
             src="/images/brand/Bokingo_large.png"
             alt="Bokingo"
             width={120}
             height={32}
-            className="hidden sm:block"
+            className="hidden sm:block relative transition-transform duration-300 group-hover:scale-[1.02]"
+            priority
           />
         </Link>
 
-        {/* Location search in navbar */}
-        <div ref={locationRef} className="flex-1 max-w-sm hidden md:block">
-          <div className="relative">
+        {/* Location search — refined pill */}
+        <div ref={locationRef} className="flex-1 max-w-md hidden md:block">
+          <div className="relative group">
             <LocationSearch
               value={selectedPlace}
               onSelect={handleLocationSelect}
@@ -108,7 +109,8 @@ export function Navbar({ onLocationChange }: NavbarProps) {
             {selectedPlace && (
               <button
                 onClick={handleClearLocation}
-                className="absolute right-10 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-muted"
+                className="absolute right-10 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-muted transition-colors"
+                aria-label="Clear location"
               >
                 <X className="h-3 w-3 text-muted-foreground" />
               </button>
@@ -127,13 +129,16 @@ export function Navbar({ onLocationChange }: NavbarProps) {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  "relative px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                   active
-                    ? "text-primary bg-primary/5"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {link.label}
+                {active && (
+                  <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-gradient-to-r from-primary to-accent" />
+                )}
               </Link>
             );
           })}
@@ -145,24 +150,24 @@ export function Navbar({ onLocationChange }: NavbarProps) {
             <>
               {(user?.role === "client_admin" || user?.role === "super_admin") && (
                 <Link href={user.role === "super_admin" ? "/admin" : "/dashboard"}>
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button variant="outline" size="sm" className="gap-2 rounded-lg">
                     <LayoutDashboard className="h-4 w-4" />
                     Dashboard
                   </Button>
                 </Link>
               )}
-              <div className="flex items-center gap-2 ml-2 pl-3 border-l">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold">
+              <div className="flex items-center gap-2 ml-1 pl-3 border-l border-border/60">
+                <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-white text-sm font-semibold shadow-md shadow-primary/20 ring-2 ring-white">
                   {user?.name?.charAt(0)?.toUpperCase()}
                 </div>
-                <span className="text-sm font-medium hidden lg:inline">
+                <span className="text-sm font-medium hidden lg:inline max-w-[120px] truncate">
                   {user?.name}
                 </span>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={logout}
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/5"
                   aria-label="Sign out"
                 >
                   <LogOut className="h-4 w-4" />
@@ -172,10 +177,14 @@ export function Navbar({ onLocationChange }: NavbarProps) {
           ) : (
             <div className="flex items-center gap-2">
               <Link href="/login">
-                <Button variant="ghost" size="sm">Login</Button>
+                <Button variant="ghost" size="sm" className="text-foreground hover:text-primary">
+                  Login
+                </Button>
               </Link>
               <Link href="/register">
-                <Button size="sm">Get Started</Button>
+                <Button size="sm" className="rounded-lg shadow-md shadow-primary/20 hover:shadow-primary/30">
+                  Get Started
+                </Button>
               </Link>
             </div>
           )}
@@ -195,9 +204,8 @@ export function Navbar({ onLocationChange }: NavbarProps) {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t bg-white">
-          <div className="px-4 py-3 space-y-2">
-            {/* Mobile location search */}
+        <div className="md:hidden border-t border-border/50 bg-white/95 backdrop-blur-xl">
+          <div className="px-4 py-4 space-y-3">
             <LocationSearch
               value={selectedPlace}
               onSelect={(place) => { handleLocationSelect(place); setMobileOpen(false); }}
@@ -211,7 +219,7 @@ export function Navbar({ onLocationChange }: NavbarProps) {
               <Link
                 key={link.href}
                 href={link.href}
-                className="block px-3 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                className="block px-3 py-2.5 rounded-lg text-sm font-medium text-foreground hover:bg-primary/5 hover:text-primary transition-colors"
               >
                 {link.label}
               </Link>
@@ -221,25 +229,27 @@ export function Navbar({ onLocationChange }: NavbarProps) {
                 {(user?.role === "client_admin" || user?.role === "super_admin") && (
                   <Link
                     href={user.role === "super_admin" ? "/admin" : "/dashboard"}
-                    className="block px-3 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted"
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-foreground hover:bg-primary/5 hover:text-primary transition-colors"
                   >
+                    <LayoutDashboard className="h-4 w-4" />
                     Dashboard
                   </Link>
                 )}
                 <button
                   onClick={() => { logout(); setMobileOpen(false); }}
-                  className="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/5"
+                  className="flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/5 transition-colors"
                 >
+                  <LogOut className="h-4 w-4" />
                   Sign Out
                 </button>
               </>
             ) : (
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2 pt-1">
                 <Link href="/login" className="flex-1">
                   <Button variant="outline" className="w-full">Login</Button>
                 </Link>
                 <Link href="/register" className="flex-1">
-                  <Button className="w-full">Sign Up</Button>
+                  <Button className="w-full">Get Started</Button>
                 </Link>
               </div>
             )}

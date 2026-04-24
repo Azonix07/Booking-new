@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -10,8 +10,9 @@ import type { MarketplaceBusiness } from "@/lib/types";
 import type { PlaceSuggestion } from "@/components/location-search";
 import {
   Gamepad2, Volleyball, Scissors, Dumbbell, Music2, Palette,
-  UtensilsCrossed, Camera, Star, MapPin, Clock, Users, ArrowRight,
-  SlidersHorizontal, X,
+  UtensilsCrossed, Camera, Star, MapPin, ArrowRight,
+  SlidersHorizontal, X, Sparkles, Shield, Zap, Clock, Calendar,
+  TrendingUp, Heart, Instagram, Twitter, Facebook,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -34,8 +35,21 @@ const SORT_OPTIONS = [
   { key: "newest",   label: "Newest" },
 ];
 
+const TRUST_PILLS = [
+  { icon: Shield,   label: "Secure" },
+  { icon: Zap,      label: "Instant" },
+  { icon: Clock,    label: "24/7" },
+  { icon: Calendar, label: "Real-time" },
+];
+
+const TRUST_STATS = [
+  { value: "10K+",  label: "Bookings made",     icon: Calendar,   tint: "from-blue-500 to-indigo-600" },
+  { value: "500+",  label: "Verified venues",   icon: Shield,     tint: "from-emerald-500 to-teal-600" },
+  { value: "4.8★",  label: "Average rating",    icon: Star,       tint: "from-amber-500 to-orange-600" },
+  { value: "99%",   label: "Instant confirms",  icon: TrendingUp, tint: "from-violet-500 to-purple-600" },
+];
+
 export default function HomePage() {
-  const router = useRouter();
   const [businesses, setBusinesses] = useState<MarketplaceBusiness[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("");
@@ -76,16 +90,13 @@ export default function HomePage() {
 
       let results = Array.isArray(data) ? data : [];
 
-      // Client-side sort: plan tier first (highest-paid on top), then by selected criteria
       const planWeight: Record<string, number> = { full_service: 4, ai: 3, basic: 2, free: 1 };
       const getPlanWeight = (b: any) => planWeight[b.plan] || 0;
 
       results.sort((a: any, b: any) => {
-        // Primary: subscription tier (descending)
         const tierDiff = getPlanWeight(b) - getPlanWeight(a);
         if (tierDiff !== 0) return tierDiff;
 
-        // Secondary: user-selected sort
         if (sortBy === "rating") {
           return (b.rating?.average || 0) - (a.rating?.average || 0);
         } else if (sortBy === "nearest" && location) {
@@ -93,7 +104,6 @@ export default function HomePage() {
         } else if (sortBy === "newest") {
           return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
         }
-        // Default secondary: rating
         return (b.rating?.average || 0) - (a.rating?.average || 0);
       });
 
@@ -113,32 +123,80 @@ export default function HomePage() {
     setActiveCategory((prev) => (prev === key ? "" : key));
   };
 
+  const sectionTitle = activeCategory
+    ? `${CATEGORIES.find(c => c.key === activeCategory)?.label || "Venues"}${location ? ` near ${location.city || location.displayName}` : ""}`
+    : location
+      ? `Discover near ${location.city || location.displayName}`
+      : "Top-rated venues for you";
+
+  const sectionSub = activeCategory
+    ? "Filtered by category"
+    : location
+      ? "Sorted by relevance and proximity"
+      : "Hand-picked, real-time available";
+
   return (
     <>
       <Navbar onLocationChange={setLocation} />
 
-      <main className="min-h-screen bg-gray-50/50">
-        {/* Filter bar */}
-        <div className="sticky top-16 z-40 bg-white/90 backdrop-blur-md border-b border-border/40">
+      <main className="min-h-screen bg-gradient-to-b from-white to-gray-50/50">
+        {/* ─── HERO BAND ─────────────────────────────────────────────────── */}
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0 hero-mesh" />
+          <div className="absolute inset-0 dot-pattern opacity-30" />
+          <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-primary/8 blur-3xl animate-float" />
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-accent/8 blur-3xl animate-float" style={{ animationDelay: "2s" }} />
+
+          <div className="relative mx-auto max-w-6xl px-4 sm:px-6 pt-12 pb-10 sm:pt-16 sm:pb-14 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur-md border border-primary/15 px-3.5 py-1.5 text-[11px] font-semibold text-primary mb-5 shadow-sm fade-in-up">
+              <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 live-indicator" />
+              <Sparkles className="h-3 w-3" />
+              Discover · Book · Play
+            </div>
+
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.05] fade-in-up" style={{ animationDelay: "0.1s" }}>
+              Book anything.{" "}
+              <span className="text-gradient animate-gradient">Instantly.</span>
+            </h1>
+
+            <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed fade-in-up" style={{ animationDelay: "0.2s" }}>
+              Turfs, gaming lounges, salons, studios — real-time slots,
+              zero friction, instant confirmation.
+            </p>
+
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-x-2 gap-y-2 fade-in-up" style={{ animationDelay: "0.3s" }}>
+              {TRUST_PILLS.map(({ icon: Icon, label }) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/60 px-3 py-1.5 text-xs font-medium text-foreground/80 shadow-sm hover:shadow-md hover:border-primary/30 hover:text-foreground transition-all duration-200"
+                >
+                  <Icon className="h-3.5 w-3.5 text-primary" />
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── FILTER BAR ────────────────────────────────────────────────── */}
+        <div className="sticky top-16 z-40 bg-white/85 backdrop-blur-xl border-y border-border/40 shadow-[0_1px_12px_-6px_rgba(0,0,0,0.05)]">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-none">
-              {/* Filter toggle */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all shrink-0 ${
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs font-semibold transition-all shrink-0 ${
                   showFilters || activeCategory
-                    ? "bg-primary text-white border-primary"
-                    : "bg-white text-muted-foreground border-border hover:border-primary/40"
+                    ? "bg-gradient-to-r from-primary to-accent text-white border-transparent shadow-md shadow-primary/20"
+                    : "bg-white text-foreground border-border/70 hover:border-primary/40 hover:shadow-sm"
                 }`}
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Filters
                 {activeCategory && (
-                  <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-[10px]">1</span>
+                  <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-white/25 text-[10px] font-bold">1</span>
                 )}
               </button>
 
-              {/* Category pills */}
               {CATEGORIES.map((cat) => {
                 const Icon = cat.icon;
                 const active = activeCategory === cat.key;
@@ -146,10 +204,10 @@ export default function HomePage() {
                   <button
                     key={cat.key}
                     onClick={() => toggleCategory(cat.key)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all whitespace-nowrap shrink-0 ${
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs font-medium transition-all whitespace-nowrap shrink-0 ${
                       active
-                        ? "bg-primary/10 text-primary border-primary/30 shadow-sm"
-                        : "bg-white text-muted-foreground border-border/60 hover:border-primary/30 hover:text-foreground"
+                        ? "bg-primary/10 text-primary border-primary/40 shadow-sm"
+                        : "bg-white text-muted-foreground border-border/60 hover:border-primary/40 hover:text-foreground hover:shadow-sm"
                     }`}
                   >
                     <Icon className="h-3.5 w-3.5" />
@@ -166,15 +224,14 @@ export default function HomePage() {
 
               <div className="flex-1" />
 
-              {/* Sort pills */}
-              <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+              <div className="hidden sm:flex items-center gap-1 shrink-0 rounded-full bg-muted/50 p-1">
                 {SORT_OPTIONS.map((opt) => (
                   <button
                     key={opt.key}
                     onClick={() => setSortBy(opt.key)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                       sortBy === opt.key
-                        ? "bg-foreground text-background"
+                        ? "bg-white text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -184,19 +241,18 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Expanded filter panel */}
             {showFilters && (
-              <div className="pb-3 pt-1 border-t border-border/30">
+              <div className="pb-3 pt-1 border-t border-border/30 animate-fade-in">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs text-muted-foreground">Sort:</span>
+                  <span className="text-xs font-medium text-muted-foreground">Sort by:</span>
                   {SORT_OPTIONS.map((opt) => (
                     <button
                       key={opt.key}
                       onClick={() => setSortBy(opt.key)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                         sortBy === opt.key
                           ? "bg-foreground text-background border-foreground"
-                          : "bg-white text-muted-foreground border-border/60 hover:border-primary/30"
+                          : "bg-white text-muted-foreground border-border/60 hover:border-primary/40 hover:text-foreground"
                       }`}
                     >
                       {opt.label}
@@ -205,7 +261,7 @@ export default function HomePage() {
                   {activeCategory && (
                     <button
                       onClick={() => { setActiveCategory(""); setShowFilters(false); }}
-                      className="ml-auto text-xs text-primary font-medium hover:underline"
+                      className="ml-auto text-xs text-primary font-semibold hover:underline"
                     >
                       Clear all
                     </button>
@@ -216,18 +272,18 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Location context bar */}
+        {/* ─── LOCATION CONTEXT BAR ──────────────────────────────────────── */}
         {location && (
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-5">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-primary/5 border border-primary/15 rounded-full px-4 py-2 w-fit">
               <MapPin className="h-3.5 w-3.5 text-primary" />
-              Showing results near <span className="font-medium text-foreground">{location.city || location.displayName}</span>
+              Showing results near <span className="font-semibold text-foreground">{location.city || location.displayName}</span>
               <button
                 onClick={() => {
                   setLocation(null);
                   window.dispatchEvent(new CustomEvent("clear-navbar-location"));
                 }}
-                className="text-xs text-primary hover:underline ml-1"
+                className="ml-1 text-xs text-primary hover:underline font-medium"
               >
                 Clear
               </button>
@@ -235,10 +291,21 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Content */}
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
+        {/* ─── CONTENT ───────────────────────────────────────────────────── */}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-10">
+          {/* Section header */}
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                {sectionTitle}
+              </h2>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                {loading ? "Loading venues..." : `${businesses.length} venue${businesses.length !== 1 ? "s" : ""} · ${sectionSub}`}
+              </p>
+            </div>
+          </div>
+
           {loading ? (
-            /* Skeleton grid */
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="rounded-3xl bg-gray-100 overflow-hidden animate-pulse aspect-[3/4] relative">
@@ -253,7 +320,6 @@ export default function HomePage() {
               ))}
             </div>
           ) : businesses.length === 0 ? (
-            /* No businesses illustration */
             <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
               <div className="relative mb-8">
                 <div className="w-40 h-40 rounded-full bg-gradient-to-br from-primary/5 to-accent/10 flex items-center justify-center">
@@ -269,7 +335,7 @@ export default function HomePage() {
                 </div>
               </div>
               <h2 className="text-xl font-bold text-foreground mb-2">
-                No shops found near you
+                No venues found
               </h2>
               <p className="text-muted-foreground max-w-sm mb-6 leading-relaxed">
                 {location
@@ -277,7 +343,7 @@ export default function HomePage() {
                   : "Set your location in the search bar above to discover businesses near you."
                 }
               </p>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3 justify-center">
                 {!location && (
                   <Button
                     onClick={() => {
@@ -307,22 +373,61 @@ export default function HomePage() {
               </div>
             </div>
           ) : (
-            /* Business cards grid */
-            <>
-              <p className="text-sm text-muted-foreground mb-4">
-                {businesses.length} business{businesses.length !== 1 ? "es" : ""} found
-                {activeCategory && (
-                  <> in <span className="font-medium text-foreground capitalize">{activeCategory.replace(/-/g, " ")}</span></>
-                )}
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                {businesses.map((biz) => (
-                  <BusinessSlotCard key={biz._id} business={biz} />
-                ))}
-              </div>
-            </>
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {businesses.map((biz, i) => (
+                <div key={biz._id} className="fade-in-up" style={{ animationDelay: `${Math.min(i * 0.04, 0.4)}s` }}>
+                  <BusinessSlotCard business={biz} />
+                </div>
+              ))}
+            </div>
           )}
         </div>
+
+        {/* ─── TRUST / SOCIAL PROOF BAND ─────────────────────────────────── */}
+        {!loading && businesses.length > 0 && (
+          <section className="relative overflow-hidden py-16 sm:py-20 px-4 sm:px-6 mt-4">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-accent/[0.02] to-transparent" />
+            <div className="absolute inset-0 dot-pattern opacity-25" />
+
+            <div className="relative mx-auto max-w-6xl">
+              <div className="text-center mb-10">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-2">Why Bokingo</p>
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                  Trusted by thousands. <span className="text-gradient">Built for speed.</span>
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
+                {TRUST_STATS.map(({ value, label, icon: Icon, tint }) => (
+                  <div
+                    key={label}
+                    className="group relative rounded-2xl bg-white border border-border/60 p-5 sm:p-6 text-center card-lift overflow-hidden"
+                  >
+                    <div className={`absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br ${tint} opacity-[0.08] group-hover:opacity-[0.14] transition-opacity duration-300`} />
+                    <div className={`relative inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${tint} text-white shadow-md mb-3 group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="relative text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+                      {value}
+                    </div>
+                    <div className="relative text-xs sm:text-sm text-muted-foreground mt-1 font-medium">
+                      {label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-10 text-center">
+                <Link href="/list-your-business">
+                  <Button size="lg" className="rounded-xl gap-2">
+                    Run a venue? List it free
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
 
         <Footer />
       </main>
@@ -348,111 +453,16 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
   const initial = business.name?.charAt(0)?.toUpperCase() || "B";
   const categoryLabel = business.category?.replace(/-/g, " ") || "";
   const [flipped, setFlipped] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const lingerTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Deterministic gradient based on name
   const gradientIdx = business.name.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % GRADIENT_SETS.length;
   const gradient = GRADIENT_SETS[gradientIdx];
 
-  const handleMouseEnter = () => {
-    setFlipped(true);
-    lingerTimer.current = setTimeout(() => setExpanded(true), 1200);
-  };
-
-  const handleMouseLeave = () => {
-    clearTimeout(lingerTimer.current);
-    setFlipped(false);
-    setExpanded(false);
-  };
-
-  // ── Expanded overlay ──
-  if (expanded) {
-    return (
-      <>
-        <div className="aspect-[3/4]" />
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in p-4"
-          onClick={() => { setExpanded(false); setFlipped(false); }}
-        >
-          <div
-            className="w-[92vw] max-w-sm rounded-3xl bg-white shadow-2xl overflow-hidden animate-scale-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Expanded gradient header */}
-            <div className={`relative h-52 bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden`}>
-              <div className="absolute inset-0 opacity-15" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,.15) 1px, transparent 0)", backgroundSize: "24px 24px" }} />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-              {business.branding?.logo ? (
-                <img src={business.branding.logo} alt={business.name} className="relative h-28 w-28 rounded-full object-cover ring-4 ring-white/80 shadow-2xl" />
-              ) : (
-                <div className="relative h-28 w-28 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center text-5xl font-bold shadow-2xl ring-4 ring-white/30">
-                  {initial}
-                </div>
-              )}
-              {business.distanceKm != null && (
-                <div className="absolute top-3.5 right-3.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 shadow-lg flex items-center gap-1">
-                  <MapPin className="h-3 w-3 text-primary" />
-                  {business.distanceKm < 1 ? `${Math.round(business.distanceKm * 1000)}m` : `${business.distanceKm.toFixed(1)}km`}
-                </div>
-              )}
-              {business.plan && business.plan !== "free" && (
-                <div className="absolute top-3.5 left-3.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 shadow-lg">
-                  {business.plan === "full_service" ? "✨ Premium" : business.plan === "ai" ? "🤖 AI" : "⚡ Pro"}
-                </div>
-              )}
-            </div>
-
-            <div className="p-5 space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-bold tracking-tight">{business.name}</h3>
-                  <p className="text-sm text-muted-foreground capitalize">{categoryLabel}</p>
-                </div>
-                {business.rating?.average > 0 && (
-                  <div className="flex items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-xl">
-                    <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-                    <span className="text-sm font-bold">{business.rating.average.toFixed(1)}</span>
-                    {business.rating.count > 0 && <span className="text-xs text-muted-foreground">({business.rating.count})</span>}
-                  </div>
-                )}
-              </div>
-
-              {business.address?.city && (
-                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {business.address.city}{business.address.state ? `, ${business.address.state}` : ""}
-                </p>
-              )}
-
-              {business.description && (
-                <p className="text-sm text-muted-foreground leading-relaxed">{business.description}</p>
-              )}
-
-              {business.tags && business.tags.length > 0 && (
-                <div className="flex gap-1.5 flex-wrap">
-                  {business.tags.slice(0, 6).map((tag) => (
-                    <span key={tag} className="px-2.5 py-0.5 rounded-full text-xs bg-primary/5 text-primary font-medium">{tag}</span>
-                  ))}
-                </div>
-              )}
-
-              <Button className="w-full rounded-xl mt-2 gap-2 h-11" onClick={() => router.push(`/book/${business.slug}`)}>
-                Book Now <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
   return (
     <div
-      className="flip-card aspect-[3/4] cursor-pointer"
+      className="flip-card aspect-[3/4] cursor-pointer group"
       style={{ perspective: "1000px" }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={() => setFlipped(true)}
+      onMouseLeave={() => setFlipped(false)}
       onClick={() => router.push(`/book/${business.slug}`)}
     >
       <div
@@ -464,13 +474,11 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
       >
         {/* ── FRONT FACE ── */}
         <div
-          className={`absolute inset-0 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-shadow bg-gradient-to-br ${gradient}`}
+          className={`absolute inset-0 rounded-3xl overflow-hidden shadow-md group-hover:shadow-2xl transition-all duration-300 bg-gradient-to-br ${gradient}`}
           style={{ backfaceVisibility: "hidden" }}
         >
-          {/* Pattern overlay */}
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,.2) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
 
-          {/* Centre avatar */}
           <div className="absolute inset-0 flex items-center justify-center pb-14">
             {business.branding?.logo ? (
               <img src={business.branding.logo} alt={business.name} className="h-24 w-24 sm:h-28 sm:w-28 rounded-full object-cover ring-4 ring-white/60 shadow-2xl" />
@@ -481,7 +489,6 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
             )}
           </div>
 
-          {/* Badges */}
           {business.distanceKm != null && (
             <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 shadow-lg flex items-center gap-1 backdrop-blur-sm">
               <MapPin className="h-2.5 w-2.5 text-primary" />
@@ -494,34 +501,32 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
             </div>
           )}
 
-          {/* Bottom fade + name */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent px-4 pb-4 pt-10">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/65 via-black/30 to-transparent px-4 pb-4 pt-10">
             <h3 className="font-bold text-sm sm:text-base text-white text-center leading-tight line-clamp-2 drop-shadow-md">
               {business.name}
             </h3>
             {business.rating?.average > 0 && (
               <div className="flex items-center justify-center gap-1 mt-1">
                 <Star className="h-3 w-3 text-amber-300 fill-amber-300" />
-                <span className="text-[11px] font-bold text-white/90">{business.rating.average.toFixed(1)}</span>
-                <span className="text-[10px] text-white/60">· {categoryLabel}</span>
+                <span className="text-[11px] font-bold text-white/95">{business.rating.average.toFixed(1)}</span>
+                <span className="text-[10px] text-white/70">· {categoryLabel}</span>
               </div>
             )}
             {!business.rating?.average && categoryLabel && (
-              <p className="text-[11px] text-white/70 capitalize text-center mt-1">{categoryLabel}</p>
+              <p className="text-[11px] text-white/75 capitalize text-center mt-1">{categoryLabel}</p>
             )}
           </div>
         </div>
 
         {/* ── BACK FACE ── */}
         <div
-          className={`absolute inset-0 rounded-3xl overflow-hidden shadow-xl bg-gradient-to-br ${gradient}`}
+          className={`absolute inset-0 rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br ${gradient}`}
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,.2) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
-          <div className="absolute inset-0 bg-black/10" />
+          <div className="absolute inset-0 bg-black/15" />
 
           <div className="relative flex flex-col items-center justify-center h-full p-5 text-center gap-2.5">
-            {/* Profile */}
             {business.branding?.logo ? (
               <img src={business.branding.logo} alt={business.name} className="h-16 w-16 rounded-full object-cover ring-3 ring-white/50 shadow-xl" />
             ) : (
@@ -532,24 +537,24 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
 
             <h3 className="font-bold text-base text-white drop-shadow-sm">{business.name}</h3>
 
-            <p className="text-xs text-white/80 capitalize font-medium">{categoryLabel}</p>
+            <p className="text-xs text-white/85 capitalize font-medium">{categoryLabel}</p>
 
             {business.rating?.average > 0 && (
               <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
                 <Star className="h-3.5 w-3.5 text-amber-300 fill-amber-300" />
                 <span className="text-xs font-bold text-white">{business.rating.average.toFixed(1)}</span>
-                {business.rating.count > 0 && <span className="text-[10px] text-white/70">({business.rating.count})</span>}
+                {business.rating.count > 0 && <span className="text-[10px] text-white/80">({business.rating.count})</span>}
               </div>
             )}
 
             {business.address?.city && (
-              <p className="text-xs text-white/80 flex items-center gap-1">
+              <p className="text-xs text-white/85 flex items-center gap-1">
                 <MapPin className="h-3 w-3" />
                 {business.address.city}{business.address.state ? `, ${business.address.state}` : ""}
               </p>
             )}
 
-            <div className="mt-2 px-5 py-2 rounded-full bg-white text-foreground text-xs font-bold flex items-center gap-1.5 shadow-lg hover:scale-105 transition-transform">
+            <div className="mt-2 px-5 py-2 rounded-full bg-white text-foreground text-xs font-bold flex items-center gap-1.5 shadow-lg group-hover:scale-105 transition-transform">
               Book Now <ArrowRight className="h-3.5 w-3.5" />
             </div>
           </div>
@@ -563,48 +568,74 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
 
 function Footer() {
   return (
-    <footer className="border-t bg-white py-12 px-4 sm:px-6">
-      <div className="mx-auto max-w-7xl">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="inline-flex items-center">
+    <footer className="relative border-t border-border/60 bg-gradient-to-b from-white to-gray-50/80 mt-4">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-14 pb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 md:gap-12">
+          <div className="col-span-2">
+            <Link href="/" className="inline-flex items-center group">
               <Image
                 src="/images/brand/Bokingo_large.png"
                 alt="Bokingo"
-                width={120}
-                height={32}
+                width={130}
+                height={36}
+                className="transition-transform duration-300 group-hover:scale-[1.02]"
               />
             </Link>
-            <p className="mt-3 text-xs text-muted-foreground max-w-xs leading-relaxed">
-              Book anything, anywhere — instantly.
+            <p className="mt-4 text-sm text-muted-foreground max-w-sm leading-relaxed">
+              Book anything, anywhere — instantly. The fastest way to discover and reserve venues near you.
             </p>
+            <div className="mt-5 flex items-center gap-2">
+              {[
+                { icon: Instagram, label: "Instagram" },
+                { icon: Twitter,   label: "Twitter" },
+                { icon: Facebook,  label: "Facebook" },
+              ].map(({ icon: Icon, label }) => (
+                <a
+                  key={label}
+                  href="#"
+                  aria-label={label}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all"
+                >
+                  <Icon className="h-4 w-4" />
+                </a>
+              ))}
+            </div>
           </div>
+
           <div>
-            <h4 className="font-semibold text-xs mb-3">Customers</h4>
-            <ul className="space-y-2 text-xs text-muted-foreground">
-              <li><Link href="/" className="hover:text-primary transition-colors">Explore</Link></li>
+            <h4 className="font-semibold text-sm mb-4 text-foreground">Customers</h4>
+            <ul className="space-y-2.5 text-sm text-muted-foreground">
+              <li><Link href="/" className="hover:text-primary transition-colors">Explore venues</Link></li>
               <li><Link href="/register" className="hover:text-primary transition-colors">Sign up</Link></li>
+              <li><Link href="/login" className="hover:text-primary transition-colors">Log in</Link></li>
             </ul>
           </div>
+
           <div>
-            <h4 className="font-semibold text-xs mb-3">Business</h4>
-            <ul className="space-y-2 text-xs text-muted-foreground">
+            <h4 className="font-semibold text-sm mb-4 text-foreground">Business</h4>
+            <ul className="space-y-2.5 text-sm text-muted-foreground">
               <li><Link href="/list-your-business" className="hover:text-primary transition-colors">List your business</Link></li>
               <li><Link href="/list-your-business/full-service" className="hover:text-primary transition-colors">Full-service</Link></li>
+              <li><Link href="/list-your-business#plans" className="hover:text-primary transition-colors">Pricing</Link></li>
             </ul>
           </div>
+
           <div>
-            <h4 className="font-semibold text-xs mb-3">Account</h4>
-            <ul className="space-y-2 text-xs text-muted-foreground">
-              <li><Link href="/login" className="hover:text-primary transition-colors">Log in</Link></li>
-              <li><Link href="/register" className="hover:text-primary transition-colors">Sign up</Link></li>
+            <h4 className="font-semibold text-sm mb-4 text-foreground">Company</h4>
+            <ul className="space-y-2.5 text-sm text-muted-foreground">
+              <li><a href="#" className="hover:text-primary transition-colors">About</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Privacy</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Terms</a></li>
             </ul>
           </div>
         </div>
-        <div className="mt-8 pt-4 border-t flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-muted-foreground">
-          <span>&copy; {new Date().getFullYear()} Bokingo</span>
-          <span className="flex items-center gap-1">
-            Made with <span className="text-red-400">♥</span> in India
+
+        <div className="mt-12 pt-6 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
+          <span>&copy; {new Date().getFullYear()} Bokingo. All rights reserved.</span>
+          <span className="flex items-center gap-1.5">
+            Made with <Heart className="h-3 w-3 text-rose-400 fill-rose-400" /> in India
           </span>
         </div>
       </div>

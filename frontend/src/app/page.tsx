@@ -76,14 +76,26 @@ export default function HomePage() {
 
       let results = Array.isArray(data) ? data : [];
 
-      // Client-side sort
-      if (sortBy === "rating") {
-        results.sort((a: any, b: any) => (b.rating?.average || 0) - (a.rating?.average || 0));
-      } else if (sortBy === "nearest" && location) {
-        results.sort((a: any, b: any) => (a.distanceKm || 999) - (b.distanceKm || 999));
-      } else if (sortBy === "newest") {
-        results.sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      }
+      // Client-side sort: plan tier first (highest-paid on top), then by selected criteria
+      const planWeight: Record<string, number> = { full_service: 4, ai: 3, basic: 2, free: 1 };
+      const getPlanWeight = (b: any) => planWeight[b.plan] || 0;
+
+      results.sort((a: any, b: any) => {
+        // Primary: subscription tier (descending)
+        const tierDiff = getPlanWeight(b) - getPlanWeight(a);
+        if (tierDiff !== 0) return tierDiff;
+
+        // Secondary: user-selected sort
+        if (sortBy === "rating") {
+          return (b.rating?.average || 0) - (a.rating?.average || 0);
+        } else if (sortBy === "nearest" && location) {
+          return (a.distanceKm || 999) - (b.distanceKm || 999);
+        } else if (sortBy === "newest") {
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+        }
+        // Default secondary: rating
+        return (b.rating?.average || 0) - (a.rating?.average || 0);
+      });
 
       setBusinesses(results);
     } catch {

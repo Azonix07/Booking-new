@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -230,12 +230,12 @@ export default function HomePage() {
             /* Skeleton grid */
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="rounded-2xl border bg-white overflow-hidden animate-pulse">
-                  <div className="h-32 bg-gray-100" />
-                  <div className="p-4 space-y-3">
-                    <div className="h-4 bg-gray-100 rounded w-3/4" />
-                    <div className="h-3 bg-gray-100 rounded w-1/2" />
-                    <div className="h-3 bg-gray-100 rounded w-2/3" />
+                <div key={i} className="rounded-2xl border bg-white overflow-hidden animate-pulse h-64">
+                  <div className="h-40 bg-gray-100 flex items-center justify-center">
+                    <div className="h-20 w-20 rounded-full bg-gray-200" />
+                  </div>
+                  <div className="flex items-center justify-center h-24">
+                    <div className="h-4 bg-gray-100 rounded w-1/2" />
                   </div>
                 </div>
               ))}
@@ -318,111 +318,209 @@ export default function HomePage() {
   );
 }
 
-// ─── Business card with slot info ────────────────────────────────────────────
+// ─── Flip card with expand-on-linger ─────────────────────────────────────────
 
 function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
   const router = useRouter();
   const initial = business.name?.charAt(0)?.toUpperCase() || "B";
   const categoryLabel = business.category?.replace(/-/g, " ") || "";
+  const [flipped, setFlipped] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const lingerTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const handleMouseEnter = () => {
+    setFlipped(true);
+    lingerTimer.current = setTimeout(() => setExpanded(true), 1200);
+  };
+
+  const handleMouseLeave = () => {
+    clearTimeout(lingerTimer.current);
+    setFlipped(false);
+    setExpanded(false);
+  };
+
+  // Expanded overlay (portal-like)
+  if (expanded) {
+    return (
+      <>
+        {/* Placeholder to keep grid space */}
+        <div className="h-64" />
+        {/* Expanded overlay */}
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in"
+          onClick={() => { setExpanded(false); setFlipped(false); }}
+        >
+          <div
+            className="w-[90vw] max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Expanded header */}
+            <div className="relative h-44 bg-gradient-to-br from-primary/10 via-accent/10 to-primary/15 flex items-center justify-center">
+              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(0,0,0,.06) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
+              {business.branding?.logo ? (
+                <img src={business.branding.logo} alt={business.name} className="h-24 w-24 rounded-full object-cover ring-4 ring-white shadow-xl" />
+              ) : (
+                <div className="h-24 w-24 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center text-4xl font-bold shadow-xl ring-4 ring-white">
+                  {initial}
+                </div>
+              )}
+              {business.distanceKm != null && (
+                <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-medium bg-white/90 shadow flex items-center gap-1">
+                  <MapPin className="h-3 w-3 text-primary" />
+                  {business.distanceKm < 1 ? `${Math.round(business.distanceKm * 1000)}m` : `${business.distanceKm.toFixed(1)}km`}
+                </div>
+              )}
+              {business.plan && business.plan !== "free" && (
+                <div className="absolute top-3 left-3">
+                  <Badge variant="secondary" className={`text-xs ${business.plan === "ai" ? "bg-violet-100 text-violet-700" : business.plan === "full_service" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
+                    {business.plan === "full_service" ? "Premium" : business.plan === "ai" ? "AI" : "Pro"}
+                  </Badge>
+                </div>
+              )}
+            </div>
+
+            {/* Expanded body */}
+            <div className="p-5 space-y-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-bold">{business.name}</h3>
+                  <p className="text-sm text-muted-foreground capitalize">{categoryLabel}</p>
+                </div>
+                {business.rating?.average > 0 && (
+                  <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg">
+                    <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                    <span className="text-sm font-bold">{business.rating.average.toFixed(1)}</span>
+                    {business.rating.count > 0 && <span className="text-xs text-muted-foreground">({business.rating.count})</span>}
+                  </div>
+                )}
+              </div>
+
+              {business.address?.city && (
+                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {business.address.city}{business.address.state ? `, ${business.address.state}` : ""}
+                </p>
+              )}
+
+              {business.description && (
+                <p className="text-sm text-muted-foreground leading-relaxed">{business.description}</p>
+              )}
+
+              {business.tags && business.tags.length > 0 && (
+                <div className="flex gap-1.5 flex-wrap">
+                  {business.tags.slice(0, 5).map((tag) => (
+                    <span key={tag} className="px-2 py-0.5 rounded-full text-xs bg-primary/5 text-primary font-medium">{tag}</span>
+                  ))}
+                </div>
+              )}
+
+              <Button
+                className="w-full rounded-xl mt-2 gap-2"
+                onClick={() => router.push(`/book/${business.slug}`)}
+              >
+                Book Now
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <div
+      className="flip-card h-64 cursor-pointer"
+      style={{ perspective: "800px" }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       onClick={() => router.push(`/book/${business.slug}`)}
-      className="group rounded-2xl border bg-white overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5"
     >
-      {/* Header area with profile */}
-      <div className="relative h-28 bg-gradient-to-br from-primary/5 via-accent/5 to-primary/10 flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(0,0,0,.05) 1px, transparent 0)", backgroundSize: "16px 16px" }} />
+      <div
+        className="flip-card-inner relative w-full h-full transition-transform duration-500"
+        style={{
+          transformStyle: "preserve-3d",
+          transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+        }}
+      >
+        {/* ── FRONT ── */}
+        <div
+          className="absolute inset-0 rounded-2xl border bg-white overflow-hidden"
+          style={{ backfaceVisibility: "hidden" }}
+        >
+          {/* Top gradient area with circle profile */}
+          <div className="relative h-40 bg-gradient-to-br from-primary/8 via-accent/5 to-primary/12 flex items-center justify-center overflow-hidden">
+            <div className="absolute inset-0 opacity-25" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(0,0,0,.05) 1px, transparent 0)", backgroundSize: "16px 16px" }} />
 
-        {/* Profile icon */}
-        <div className="relative">
-          {business.branding?.logo ? (
-            <img
-              src={business.branding.logo}
-              alt={business.name}
-              className="h-16 w-16 rounded-2xl object-cover ring-3 ring-white shadow-lg"
-            />
-          ) : (
-            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center text-2xl font-bold shadow-lg shadow-primary/25 ring-3 ring-white">
-              {initial}
-            </div>
-          )}
+            {business.branding?.logo ? (
+              <img src={business.branding.logo} alt={business.name} className="h-20 w-20 rounded-full object-cover ring-4 ring-white shadow-lg" />
+            ) : (
+              <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center text-3xl font-bold shadow-lg shadow-primary/25 ring-4 ring-white">
+                {initial}
+              </div>
+            )}
+
+            {business.distanceKm != null && (
+              <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/90 shadow-sm flex items-center gap-1 backdrop-blur-sm">
+                <MapPin className="h-2.5 w-2.5 text-primary" />
+                {business.distanceKm < 1 ? `${Math.round(business.distanceKm * 1000)}m` : `${business.distanceKm.toFixed(1)}km`}
+              </div>
+            )}
+
+            {business.plan && business.plan !== "free" && (
+              <div className="absolute top-2.5 left-2.5">
+                <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 ${business.plan === "ai" ? "bg-violet-100 text-violet-700" : business.plan === "full_service" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
+                  {business.plan === "full_service" ? "Premium" : business.plan === "ai" ? "AI" : "Pro"}
+                </Badge>
+              </div>
+            )}
+          </div>
+
+          {/* Name only */}
+          <div className="flex items-center justify-center h-24 px-4">
+            <h3 className="font-semibold text-sm text-foreground text-center line-clamp-2">
+              {business.name}
+            </h3>
+          </div>
         </div>
 
-        {/* Distance badge */}
-        {business.distanceKm != null && (
-          <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/90 shadow-sm flex items-center gap-1 backdrop-blur-sm">
-            <MapPin className="h-2.5 w-2.5 text-primary" />
-            {business.distanceKm < 1
-              ? `${Math.round(business.distanceKm * 1000)}m`
-              : `${business.distanceKm.toFixed(1)}km`}
-          </div>
-        )}
+        {/* ── BACK ── */}
+        <div
+          className="absolute inset-0 rounded-2xl border bg-white overflow-hidden"
+          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+        >
+          <div className="flex flex-col items-center justify-center h-full p-4 text-center gap-2">
+            {/* Small profile */}
+            {business.branding?.logo ? (
+              <img src={business.branding.logo} alt={business.name} className="h-12 w-12 rounded-full object-cover ring-2 ring-primary/20" />
+            ) : (
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center text-lg font-bold">
+                {initial}
+              </div>
+            )}
 
-        {/* Plan badge */}
-        {business.plan && business.plan !== "free" && (
-          <div className="absolute top-2.5 left-2.5">
-            <Badge
-              variant="secondary"
-              className={`text-[10px] px-1.5 py-0 ${
-                business.plan === "ai" ? "bg-violet-100 text-violet-700" :
-                business.plan === "full_service" ? "bg-amber-100 text-amber-700" :
-                "bg-blue-100 text-blue-700"
-              }`}
-            >
-              {business.plan === "full_service" ? "Premium" : business.plan === "ai" ? "AI" : "Pro"}
-            </Badge>
-          </div>
-        )}
-      </div>
+            <h3 className="font-bold text-sm">{business.name}</h3>
 
-      {/* Content */}
-      <div className="p-3.5">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1">
-            {business.name}
-          </h3>
-          {business.rating?.average > 0 && (
-            <div className="flex items-center gap-0.5 shrink-0">
-              <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
-              <span className="text-xs font-semibold">{business.rating.average.toFixed(1)}</span>
+            <p className="text-xs text-muted-foreground capitalize">{categoryLabel}</p>
+
+            {business.rating?.average > 0 && (
+              <div className="flex items-center gap-1">
+                <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                <span className="text-xs font-semibold">{business.rating.average.toFixed(1)}</span>
+                {business.rating.count > 0 && <span className="text-[10px] text-muted-foreground">({business.rating.count})</span>}
+              </div>
+            )}
+
+            {business.address?.city && (
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {business.address.city}
+              </p>
+            )}
+
+            <div className="mt-1 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium flex items-center gap-1">
+              Book Now <ArrowRight className="h-3 w-3" />
             </div>
-          )}
-        </div>
-
-        {categoryLabel && (
-          <p className="text-[11px] text-muted-foreground capitalize mt-0.5">{categoryLabel}</p>
-        )}
-
-        {business.address?.city && (
-          <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-            <MapPin className="h-2.5 w-2.5 shrink-0" />
-            {business.address.city}{business.address.state ? `, ${business.address.state}` : ""}
-          </p>
-        )}
-
-        {business.description && (
-          <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">
-            {business.description}
-          </p>
-        )}
-
-        {/* Quick info tags */}
-        <div className="flex items-center gap-2 mt-2.5 pt-2.5 border-t border-border/40">
-          {business.tags && business.tags.length > 0 && (
-            <div className="flex gap-1 flex-wrap">
-              {business.tags.slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  className="px-1.5 py-0.5 rounded text-[10px] bg-gray-100 text-muted-foreground"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-          <div className="ml-auto">
-            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
           </div>
         </div>
       </div>

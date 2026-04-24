@@ -230,10 +230,10 @@ export default function HomePage() {
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="rounded-3xl bg-white overflow-hidden animate-pulse aspect-[3/4]">
-                  <div className="h-[62%] bg-gray-100 flex items-center justify-center">
+                  <div className="h-[72%] bg-gray-100 flex items-center justify-center">
                     <div className="h-28 w-28 sm:h-32 sm:w-32 rounded-full bg-gray-200" />
                   </div>
-                  <div className="h-[38%] flex flex-col items-center justify-center gap-2">
+                  <div className="h-[28%] flex flex-col items-center justify-center gap-2">
                     <div className="h-4 bg-gray-100 rounded w-1/2" />
                     <div className="h-3 bg-gray-50 rounded w-1/3" />
                   </div>
@@ -456,7 +456,7 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
           style={{ backfaceVisibility: "hidden" }}
         >
           {/* Vibrant gradient background fills 60% */}
-          <div className={`relative h-[62%] bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden`}>
+          <div className={`relative h-[72%] bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden`}>
             {/* Subtle pattern overlay */}
             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,.2) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
             {/* Bottom fade to white */}
@@ -486,7 +486,7 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
           </div>
 
           {/* Name + rating at bottom 38% */}
-          <div className="h-[38%] flex flex-col items-center justify-center px-4 bg-white">
+          <div className="h-[28%] flex flex-col items-center justify-center px-4 bg-white">
             <h3 className="font-bold text-sm sm:text-base text-foreground text-center leading-tight line-clamp-2">
               {business.name}
             </h3>

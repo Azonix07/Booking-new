@@ -8,13 +8,14 @@ import {
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/public.decorator';
+import { UserRole } from '../users/schemas/user.schema';
 
 @Controller('ai-assistant')
 export class AiAssistantController {
   constructor(private readonly aiService: AiAssistantService) {}
 
   @Post('chat')
-  @Roles('client_admin', 'super_admin')
+  @Roles(UserRole.CLIENT_ADMIN, UserRole.SUPER_ADMIN)
   async chat(
     @CurrentTenant() tenantId: string,
     @Body() dto: AiChatDto,
@@ -23,7 +24,7 @@ export class AiAssistantController {
   }
 
   @Post('floor-plan')
-  @Roles('client_admin', 'super_admin')
+  @Roles(UserRole.CLIENT_ADMIN, UserRole.SUPER_ADMIN)
   async generateFloorPlan(
     @CurrentTenant() tenantId: string,
     @Body() dto: FloorPlannerDto,
@@ -32,7 +33,7 @@ export class AiAssistantController {
   }
 
   @Post('detect-confusion')
-  @Roles('client_admin', 'super_admin')
+  @Roles(UserRole.CLIENT_ADMIN, UserRole.SUPER_ADMIN)
   async detectConfusion(
     @CurrentTenant() tenantId: string,
     @Body() dto: ConfusionDetectDto,
@@ -41,7 +42,7 @@ export class AiAssistantController {
   }
 
   @Get('suggest-services')
-  @Roles('client_admin', 'super_admin')
+  @Roles(UserRole.CLIENT_ADMIN, UserRole.SUPER_ADMIN)
   async suggestServices(@Query('category') category: string) {
     return this.aiService.suggestServices(category);
   }

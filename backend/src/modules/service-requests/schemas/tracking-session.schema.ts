@@ -49,14 +49,14 @@ export class TrackingSession {
   })
   locationHistory: { lat: number; lng: number; timestamp: Date }[];
 
-  @Prop({ default: null })
-  etaMinutes: number | null;
+  @Prop({ type: Number, default: null })
+  etaMinutes: number;
 
-  @Prop({ default: null })
-  distanceKm: number | null;
+  @Prop({ type: Number, default: null })
+  distanceKm: number;
 
   @Prop({ type: Date, default: null })
-  completedAt: Date | null;
+  completedAt: Date;
 }
 
 export const TrackingSessionSchema = SchemaFactory.createForClass(TrackingSession);

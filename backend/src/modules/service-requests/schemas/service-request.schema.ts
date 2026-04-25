@@ -34,7 +34,7 @@ export class ServiceRequest {
   customerId: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'User', default: null })
-  providerId: Types.ObjectId | null;
+  providerId: Types.ObjectId;
 
   @Prop({ enum: ServiceCategory, required: true })
   category: ServiceCategory;
@@ -77,26 +77,26 @@ export class ServiceRequest {
 
   // Timing
   @Prop({ type: Date, default: null })
-  acceptedAt: Date | null;
+  acceptedAt: Date;
 
   @Prop({ type: Date, default: null })
-  arrivedAt: Date | null;
+  arrivedAt: Date;
 
   @Prop({ type: Date, default: null })
-  workStartedAt: Date | null;
+  workStartedAt: Date;
 
   @Prop({ type: Date, default: null })
-  completedAt: Date | null;
+  completedAt: Date;
 
   // ETA in minutes
-  @Prop({ default: null })
-  etaMinutes: number | null;
+  @Prop({ type: Number, default: null })
+  etaMinutes: number;
 
   @Prop({ default: '' })
   notes: string;
 
-  @Prop({ default: null })
-  customerRating: number | null;
+  @Prop({ type: Number, default: null })
+  customerRating: number;
 
   @Prop({ default: '' })
   customerReview: string;

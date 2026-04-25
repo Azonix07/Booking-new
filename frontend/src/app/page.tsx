@@ -15,7 +15,7 @@ import {
   Gamepad2, Volleyball, Scissors, Dumbbell, Music2, Palette,
   UtensilsCrossed, Camera, Star, MapPin, ArrowRight,
   SlidersHorizontal, X, Shield, Zap, Clock, Calendar,
-  TrendingUp, Heart, Instagram, Twitter, Facebook,
+  TrendingUp, Heart, Instagram, Twitter, Facebook, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -270,12 +270,18 @@ export default function HomePage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {Array.from({ length: 10 }).map((_, i) => (
                 <div key={i} className="rounded-2xl bg-white border border-border/60 overflow-hidden animate-pulse">
-                  <div className="aspect-[5/3] bg-gray-200" />
-                  <div className="p-3 flex items-start gap-2.5">
-                    <div className="h-11 w-11 rounded-xl bg-gray-200 -mt-7 ring-3 ring-white" />
-                    <div className="flex-1 pt-0.5 space-y-1.5">
-                      <div className="h-3 w-3/4 rounded bg-gray-200" />
-                      <div className="h-2.5 w-1/2 rounded bg-gray-100" />
+                  <div className="aspect-[4/3] bg-gray-200" />
+                  <div className="px-3.5 pt-2 pb-3.5">
+                    <div className="flex items-start gap-3">
+                      <div className="h-14 w-14 sm:h-[60px] sm:w-[60px] rounded-full bg-gray-200 -mt-9 ring-[3px] ring-white" />
+                      <div className="flex-1 pt-1.5 space-y-1.5">
+                        <div className="h-3.5 w-4/5 rounded bg-gray-200" />
+                        <div className="h-2.5 w-1/2 rounded bg-gray-100" />
+                      </div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between">
+                      <div className="h-4 w-14 rounded bg-gray-200" />
+                      <div className="h-3 w-10 rounded bg-gray-100" />
                     </div>
                   </div>
                 </div>
@@ -429,89 +435,143 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
   return (
     <div
       onClick={() => router.push(`/book/${business.slug}`)}
-      className="group cursor-pointer rounded-2xl bg-white border border-border/60 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-primary/30 transition-all duration-300"
+      className={cn(
+        "group relative cursor-pointer rounded-2xl bg-white border overflow-hidden shadow-sm transition-all duration-300",
+        "hover:shadow-2xl hover:-translate-y-1.5 hover:border-primary/40",
+        isPremium
+          ? "border-amber-200/80 hover:border-amber-300 shadow-amber-100/40"
+          : "border-border/60",
+      )}
     >
-      {/* Cover image band */}
-      <div className="relative aspect-[5/3] overflow-hidden bg-muted">
+      {/* Premium glow accent — subtle gold sheen at top */}
+      {isPremium && (
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400 to-transparent z-10" />
+      )}
+
+      {/* Cover image — taller aspect for impact */}
+      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={cardImage}
           alt={business.name}
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
           loading="lazy"
         />
-        {/* Subtle darken for badge legibility */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/5" />
+        {/* Soft bottom darken for badge legibility */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-transparent to-black/30" />
+        {/* Hover sheen */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-primary/0 via-primary/0 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-        {/* Top-left plan badge */}
+        {/* Top-left: plan badge */}
         {planLabel && (
           <div className={cn(
-            "absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full text-[10px] font-bold backdrop-blur-md shadow-sm",
+            "absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-lg flex items-center gap-1",
             isPremium
-              ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white"
-              : "bg-white/90 text-foreground"
+              ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-amber-500/30"
+              : "bg-white/95 text-foreground"
           )}>
-            {isPremium && "✨ "}{planLabel}
+            {isPremium && <Sparkles className="h-2.5 w-2.5" />}
+            {planLabel}
           </div>
         )}
 
-        {/* Top-right distance */}
-        {business.distanceKm != null && (
-          <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 shadow-sm flex items-center gap-0.5 backdrop-blur-md">
-            <MapPin className="h-2.5 w-2.5 text-primary" />
-            {business.distanceKm < 1 ? `${Math.round(business.distanceKm * 1000)}m` : `${business.distanceKm.toFixed(1)}km`}
-          </div>
-        )}
-
-        {/* Favorite icon — future */}
+        {/* Top-right: favorite */}
         <button
           onClick={(e) => e.stopPropagation()}
           aria-label="Favorite"
-          className="absolute bottom-2.5 right-2.5 h-8 w-8 rounded-full bg-white/90 backdrop-blur-md shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:scale-110"
+          className="absolute top-2.5 right-2.5 h-9 w-9 rounded-full bg-white/85 backdrop-blur-md shadow-md flex items-center justify-center hover:bg-white hover:scale-110 active:scale-95 transition-all"
         >
-          <Heart className="h-4 w-4 text-rose-500" />
+          <Heart className="h-4 w-4 text-rose-500 transition-all group-hover:scale-110" />
         </button>
+
+        {/* Bottom-left: live indicator */}
+        <div className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/95 text-white shadow-md backdrop-blur-md flex items-center gap-1.5">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-white opacity-75 animate-ping" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
+          </span>
+          Live
+        </div>
+
+        {/* Bottom-right: distance */}
+        {business.distanceKm != null && (
+          <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-black/65 backdrop-blur-md text-white shadow-md flex items-center gap-1">
+            <MapPin className="h-2.5 w-2.5" />
+            {business.distanceKm < 1 ? `${Math.round(business.distanceKm * 1000)}m` : `${business.distanceKm.toFixed(1)}km`}
+          </div>
+        )}
       </div>
 
-      {/* Info row — brand-focused */}
-      <div className="p-3 sm:p-3.5">
-        <div className="flex items-start gap-2.5">
-          {/* Logo square (not circle — looks more like a brand mark) */}
-          <div className="shrink-0 -mt-7 relative">
-            {business.branding?.logo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={business.branding.logo}
-                alt={business.name}
-                className="h-11 w-11 sm:h-12 sm:w-12 rounded-xl object-cover ring-3 ring-white shadow-md bg-white"
-              />
-            ) : (
-              <div className={cn(
-                "h-11 w-11 sm:h-12 sm:w-12 rounded-xl flex items-center justify-center text-white text-base sm:text-lg font-bold ring-3 ring-white shadow-md bg-gradient-to-br",
-                accent
-              )}>
-                {initial}
+      {/* Info section — brand forward */}
+      <div className="px-3.5 pt-2 pb-3.5">
+        <div className="flex items-start gap-3">
+          {/* Round logo — Instagram profile style, with story-ring for premium */}
+          <div className="shrink-0 -mt-9 relative">
+            <div className={cn(
+              "rounded-full p-[2.5px]",
+              isPremium
+                ? "bg-gradient-to-tr from-amber-400 via-rose-500 to-violet-600"
+                : "bg-white"
+            )}>
+              <div className="rounded-full p-[2px] bg-white">
+                {business.branding?.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={business.branding.logo}
+                    alt={business.name}
+                    className="h-14 w-14 sm:h-[60px] sm:w-[60px] rounded-full object-cover bg-white"
+                  />
+                ) : (
+                  <div className={cn(
+                    "h-14 w-14 sm:h-[60px] sm:w-[60px] rounded-full flex items-center justify-center text-white text-xl sm:text-[22px] font-bold bg-gradient-to-br shadow-inner",
+                    accent
+                  )}>
+                    {initial}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
 
-          <div className="min-w-0 flex-1 pt-0.5">
-            <h3 className="font-bold text-sm sm:text-[15px] text-foreground leading-tight truncate group-hover:text-primary transition-colors">
+          {/* Name + meta — visible 2-line wrap */}
+          <div className="min-w-0 flex-1 pt-1.5">
+            <h3 className="font-extrabold text-[15px] sm:text-base text-foreground leading-[1.2] line-clamp-2 group-hover:text-primary transition-colors">
               {business.name}
             </h3>
-            <p className="mt-0.5 text-[11px] sm:text-xs text-muted-foreground capitalize truncate">
+            <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground capitalize truncate font-medium">
               {categoryLabel}
               {business.address?.city ? ` · ${business.address.city}` : ""}
             </p>
           </div>
+        </div>
 
-          {/* Rating chip on right */}
-          {business.rating?.average > 0 && (
-            <div className="shrink-0 flex items-center gap-0.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-md px-1.5 py-0.5 text-[11px] font-bold">
-              <Star className="h-2.5 w-2.5 fill-emerald-600 text-emerald-600" />
-              {business.rating.average.toFixed(1)}
-            </div>
-          )}
+        {/* Bottom row: rating + book CTA */}
+        <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5">
+            {business.rating?.average > 0 ? (
+              <>
+                <div className="flex items-center gap-0.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-md px-1.5 py-0.5 text-[11px] font-bold">
+                  <Star className="h-2.5 w-2.5 fill-emerald-600 text-emerald-600" />
+                  {business.rating.average.toFixed(1)}
+                </div>
+                {business.rating.count > 0 && (
+                  <span className="text-[10px] text-muted-foreground font-medium">
+                    {business.rating.count >= 100 ? `${Math.floor(business.rating.count / 100) * 100}+` : business.rating.count} reviews
+                  </span>
+                )}
+              </>
+            ) : (
+              <div className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100">
+                ✨ NEW
+              </div>
+            )}
+          </div>
+
+          {/* Book chip — animated arrow on hover */}
+          <div className="flex items-center gap-1 text-xs font-bold text-primary opacity-80 group-hover:opacity-100 transition-all">
+            Book
+            <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+          </div>
         </div>
       </div>
     </div>

@@ -244,7 +244,7 @@ export default function WebsiteEditorPage() {
               </Button>
             </div>
             <div className="flex items-center gap-1">
-              <a href={`/store/${tenant?.slug || user?.tenantId}`} target="_blank" rel="noopener noreferrer">
+              <a href={`/store/${tenant?.slug || user?.tenantId}?preview=true`} target="_blank" rel="noopener noreferrer">
                 <Button variant="ghost" size="icon" className="h-8 w-8" title="Preview">
                   <ExternalLink className="h-3.5 w-3.5" />
                 </Button>
@@ -624,7 +624,7 @@ export default function WebsiteEditorPage() {
             <MousePointerClick className="h-4 w-4 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">Click any section in the preview to edit it</span>
           </div>
-          <a href={`/store/${tenant?.slug || user?.tenantId}`} target="_blank" rel="noopener noreferrer">
+          <a href={`/store/${tenant?.slug || user?.tenantId}?preview=true`} target="_blank" rel="noopener noreferrer">
             <Button variant="outline" size="sm" className="text-xs h-7">
               <ExternalLink className="h-3 w-3 mr-1" /> Full Preview
             </Button>

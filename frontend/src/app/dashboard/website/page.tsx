@@ -434,7 +434,7 @@ export default function WebsitePage() {
                   <Pencil className="mr-2 h-4 w-4" /> Open Editor
                 </Button>
               </Link>
-              <Link href={`/store/${tenant?.slug || user?.tenantId}`} target="_blank">
+              <Link href={`/store/${tenant?.slug || user?.tenantId}?preview=true`} target="_blank">
                 <Button variant="outline">
                   <ExternalLink className="mr-2 h-4 w-4" /> Preview Site
                 </Button>
@@ -523,7 +523,7 @@ export default function WebsitePage() {
             <Pencil className="mr-2 h-4 w-4" /> Open Editor
           </Button>
         </Link>
-        <Link href={`/store/${tenant?.slug || user?.tenantId}`} target="_blank">
+        <Link href={`/store/${tenant?.slug || user?.tenantId}?preview=true`} target="_blank">
           <Button variant="outline">
             <ExternalLink className="mr-2 h-4 w-4" /> Preview Site
           </Button>

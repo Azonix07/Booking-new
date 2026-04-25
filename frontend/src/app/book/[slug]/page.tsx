@@ -16,6 +16,10 @@ import {
   Star,
   MapPin,
   Check,
+  Sunrise,
+  Sun,
+  Sunset,
+  Moon,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -76,6 +80,27 @@ function computeEndTime(startTime: string, durationMinutes: number): string {
   const mm = total % 60;
   return `${hh.toString().padStart(2, "0")}:${mm.toString().padStart(2, "0")}`;
 }
+
+/**
+ * Bucket a slot's start time into a time-of-day period.
+ * 5–11:59 → morning, 12–16:59 → afternoon, 17–20:59 → evening, else night.
+ */
+type TimePeriod = "morning" | "afternoon" | "evening" | "night";
+function getTimePeriod(startTime: string): TimePeriod {
+  const hour = parseInt(startTime.split(":")[0], 10);
+  if (hour >= 5 && hour < 12) return "morning";
+  if (hour >= 12 && hour < 17) return "afternoon";
+  if (hour >= 17 && hour < 21) return "evening";
+  return "night";
+}
+
+const PERIOD_META: Record<TimePeriod, { label: string; range: string; Icon: typeof Sunrise }> = {
+  morning: { label: "Morning", range: "Before 12 PM", Icon: Sunrise },
+  afternoon: { label: "Afternoon", range: "12 – 5 PM", Icon: Sun },
+  evening: { label: "Evening", range: "5 – 9 PM", Icon: Sunset },
+  night: { label: "Night", range: "After 9 PM", Icon: Moon },
+};
+const PERIOD_ORDER: TimePeriod[] = ["morning", "afternoon", "evening", "night"];
 
 /* ═══════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
@@ -743,45 +768,76 @@ export default function BookingPage() {
                       <span className="bp-empty-hint">Try another date or service</span>
                     </div>
                   ) : (
-                    <div className="bp-slots-grid">
-                      {slots.map((slot) => {
-                        const isSelected = selectedSlot?.slotId === slot.slotId;
-                        const isFull = slot.status === "full";
-                        const isBlocked = slot.status === "blocked";
-                        const disabled = isFull || isBlocked || !slot.canBook;
-
-                        let stateClass = "bp-slot-available";
-                        if (slot.status === "filling") stateClass = "bp-slot-filling";
-                        if (isFull) stateClass = "bp-slot-full";
-                        if (isBlocked) stateClass = "bp-slot-blocked";
-
-                        const label =
-                          isFull
-                            ? "Full"
-                            : isBlocked
-                            ? "Closed"
-                            : slot.status === "filling"
-                            ? `${slot.availablePlayers} left`
-                            : `${slot.availablePlayers} open`;
+                    <div className="bp-slots-periods">
+                      {PERIOD_ORDER.map((period) => {
+                        const periodSlots = slots.filter((s) => getTimePeriod(s.startTime) === period);
+                        if (periodSlots.length === 0) return null;
+                        const meta = PERIOD_META[period];
+                        const Icon = meta.Icon;
+                        const availableCount = periodSlots.filter(
+                          (s) => s.status !== "full" && s.status !== "blocked" && s.canBook,
+                        ).length;
 
                         return (
-                          <motion.button
-                            key={slot.slotId}
-                            className={`bp-slot ${stateClass}${isSelected ? " bp-slot-selected" : ""}`}
-                            disabled={disabled}
-                            onClick={() => setSelectedSlot(isSelected ? null : slot)}
-                            whileHover={!disabled ? { scale: 1.05, y: -2 } : undefined}
-                            whileTap={!disabled ? { scale: 0.96 } : undefined}
-                          >
-                            {isSelected && (
-                              <span className="bp-slot-check">
-                                <Check size={12} />
+                          <div key={period} className={`bp-period bp-period-${period}`}>
+                            <div className="bp-period-header">
+                              <div className="bp-period-icon">
+                                <Icon size={18} />
+                              </div>
+                              <div className="bp-period-text">
+                                <h4 className="bp-period-label">{meta.label}</h4>
+                                <span className="bp-period-range">{meta.range}</span>
+                              </div>
+                              <span className="bp-period-count">
+                                {availableCount > 0
+                                  ? `${availableCount} ${availableCount === 1 ? "slot" : "slots"}`
+                                  : "All booked"}
                               </span>
-                            )}
-                            {!isSelected && <span className="bp-slot-dot" />}
-                            <span className="bp-slot-time">{formatTime(slot.startTime)}</span>
-                            <span className="bp-slot-label">{label}</span>
-                          </motion.button>
+                            </div>
+
+                            <div className="bp-slots-grid bp-slots-grid-period">
+                              {periodSlots.map((slot) => {
+                                const isSelected = selectedSlot?.slotId === slot.slotId;
+                                const isFull = slot.status === "full";
+                                const isBlocked = slot.status === "blocked";
+                                const disabled = isFull || isBlocked || !slot.canBook;
+
+                                let stateClass = "bp-slot-available";
+                                if (slot.status === "filling") stateClass = "bp-slot-filling";
+                                if (isFull) stateClass = "bp-slot-full";
+                                if (isBlocked) stateClass = "bp-slot-blocked";
+
+                                const label =
+                                  isFull
+                                    ? "Full"
+                                    : isBlocked
+                                    ? "Closed"
+                                    : slot.status === "filling"
+                                    ? `${slot.availablePlayers} left`
+                                    : `${slot.availablePlayers} open`;
+
+                                return (
+                                  <motion.button
+                                    key={slot.slotId}
+                                    className={`bp-slot ${stateClass}${isSelected ? " bp-slot-selected" : ""}`}
+                                    disabled={disabled}
+                                    onClick={() => setSelectedSlot(isSelected ? null : slot)}
+                                    whileHover={!disabled ? { scale: 1.05, y: -2 } : undefined}
+                                    whileTap={!disabled ? { scale: 0.96 } : undefined}
+                                  >
+                                    {isSelected && (
+                                      <span className="bp-slot-check">
+                                        <Check size={12} />
+                                      </span>
+                                    )}
+                                    {!isSelected && <span className="bp-slot-dot" />}
+                                    <span className="bp-slot-time">{formatTime(slot.startTime)}</span>
+                                    <span className="bp-slot-label">{label}</span>
+                                  </motion.button>
+                                );
+                              })}
+                            </div>
+                          </div>
                         );
                       })}
                     </div>

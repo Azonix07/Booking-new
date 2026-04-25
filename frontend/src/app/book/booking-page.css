@@ -546,6 +546,94 @@
 .bp-legend-full .bp-legend-label { color: #dc2626; }
 
 /* ============================================
+   TIME-OF-DAY PERIODS
+   ============================================ */
+.bp-slots-periods {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 28px 28px;
+}
+
+.bp-period {
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff, #fafbfc);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  transition: box-shadow 0.25s ease;
+}
+
+.bp-period:hover {
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+}
+
+.bp-period-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.bp-period-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.bp-period-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.bp-period-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.bp-period-range {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.bp-period-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  flex-shrink: 0;
+}
+
+/* Period-specific accent tints */
+.bp-period-morning .bp-period-icon { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
+.bp-period-morning .bp-period-count { background: #fef3c7; color: #b45309; }
+
+.bp-period-afternoon .bp-period-icon { background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #c2410c; }
+.bp-period-afternoon .bp-period-count { background: #ffedd5; color: #c2410c; }
+
+.bp-period-evening .bp-period-icon { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #6d28d9; }
+.bp-period-evening .bp-period-count { background: #ede9fe; color: #6d28d9; }
+
+.bp-period-night .bp-period-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+.bp-period-night .bp-period-count { background: #dbeafe; color: #1d4ed8; }
+
+.bp-slots-grid-period {
+  padding: 14px 18px 18px !important;
+}
+
+/* ============================================
    TIME SLOT GRID
    ============================================ */
 .bp-slots-grid {
@@ -1359,6 +1447,27 @@
     grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
     gap: 8px;
     padding: 4px 20px 20px;
+  }
+
+  .bp-slots-periods {
+    padding: 4px 16px 20px;
+    gap: 14px;
+  }
+
+  .bp-slots-grid-period {
+    padding: 12px 14px 14px !important;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+
+  .bp-period-header {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .bp-period-icon {
+    width: 32px;
+    height: 32px;
   }
 
   .bp-date-strip {

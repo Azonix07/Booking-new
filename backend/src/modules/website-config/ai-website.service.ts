@@ -5,13 +5,53 @@ import { generateWebsiteConfig } from './ai-website-generator';
 /**
  * AI Website Generation Service
  *
- * Calls Claude Haiku to generate a structured JSON website config.
- * Falls back to the template-based generator if:
- *   - AI is disabled via config
- *   - API key is missing
- *   - Claude returns an unparseable response
- *   - Any network/API error occurs
+ * Uses Claude Opus 4.5 for top-quality website generation.
+ *
+ * Token efficiency: the static schema is sent as a CACHED system prompt block
+ * (cache_control: ephemeral). After the first call the schema reads at ~10%
+ * cost, so a second/third generation is cheap even on Opus.
+ *
+ * Falls back to the template-based generator on any error so users always get
+ * a website.
  */
+
+const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
+const ANTHROPIC_VERSION = '2023-06-01';
+
+// Schema kept terse — Opus understands JSON structure from minimal hints.
+// Cache-friendly: this exact string is stable across requests.
+const SCHEMA_SYSTEM = `You are a senior product designer + copywriter. Output ONE JSON object — no markdown, no commentary.
+
+Schema:
+{
+  "theme": { "primaryColor": "#hex", "secondaryColor": "#hex", "backgroundColor": "#hex", "textColor": "#hex", "fontFamily": "<Google Font>", "borderRadius": "0.75rem", "mode": "light"|"dark" },
+  "layout": { "headerStyle": "centered"|"left-aligned"|"transparent", "footerStyle": "minimal"|"full"|"none", "maxWidth": "1280px" },
+  "sections": [{ "type": <see below>, "order": <int>, "isVisible": true, "config": {...} }],
+  "seo": { "title": "<60ch>", "description": "<155ch>", "ogImage": "", "favicon": "" },
+  "customCSS": "",
+  "customHeadHTML": ""
+}
+
+Section types & config keys (use ALL relevant keys; copy must be specific & vivid, NOT generic):
+- hero: { headline, subtitle, ctaText }
+- services: { title, columns: 3, showPrice: true, showDuration: true, showCapacity: true }
+- about: { title, content (~80 words), layout: "side-by-side", showImage: true }
+- pricing: { title, subtitle }
+- testimonials: { title, items: [{ text (~25 words), author, rating }] } — exactly 3 items
+- gallery: { title, columns: 3 }
+- faq: { title, items: [{ question, answer }] } — exactly 5 items
+- contact: { title, phone: "+91 ...", email, address, showMap: true, showForm: true }
+- cta: { title, subtitle, buttonText }
+
+Required output:
+- 7 sections, ordered: hero(1), services(2), about(3), pricing(4), testimonials(5), faq(6), cta(7)
+- Real Google Font (e.g. "Inter", "Plus Jakarta Sans", "DM Sans", "Manrope")
+- Theme palette: harmonious, accessible (WCAG AA), feels premium
+- Copy: punchy, benefit-led, written for the SPECIFIC business — never "we offer great service"
+- Headlines under 8 words. Subtitles under 18 words.
+- Testimonials: include first names + last initial, varied ratings 4-5
+- FAQ: actually-useful questions a real customer would ask`;
+
 @Injectable()
 export class AiWebsiteService {
   private readonly logger = new Logger(AiWebsiteService.name);
@@ -22,13 +62,13 @@ export class AiWebsiteService {
 
   constructor(private readonly configService: ConfigService) {
     this.apiKey = this.configService.get<string>('ai.anthropicApiKey') || '';
-    this.model = this.configService.get<string>('ai.model') || 'claude-3-haiku-20240307';
-    this.maxTokens = this.configService.get<number>('ai.maxTokens') || 4096;
+    this.model = this.configService.get<string>('ai.model') || 'claude-opus-4-5-20250929';
+    this.maxTokens = this.configService.get<number>('ai.maxTokens') || 3000;
     this.enabled = this.configService.get<boolean>('ai.enabled') || false;
   }
 
   /**
-   * Generate a website config using Claude Haiku.
+   * Generate a website config using Claude Opus.
    * Falls back to template system on any failure.
    */
   async generateWebsiteConfigWithAI(
@@ -36,7 +76,6 @@ export class AiWebsiteService {
     designStyle?: string,
     description?: string,
   ): Promise<{ config: any; source: 'ai' | 'template' }> {
-    // If AI is disabled or no key, go straight to template
     if (!this.enabled || !this.apiKey) {
       this.logger.log('AI disabled or no API key — using template fallback');
       return {
@@ -65,83 +104,40 @@ export class AiWebsiteService {
     designStyle?: string,
     description?: string,
   ): Promise<any> {
-    const systemPrompt = `You are a professional web designer AI. Generate a structured JSON website configuration for a booking-enabled business website.
-
-The JSON must follow this exact schema:
-{
-  "theme": {
-    "primaryColor": "<hex>",
-    "secondaryColor": "<hex>",
-    "backgroundColor": "<hex>",
-    "textColor": "<hex>",
-    "fontFamily": "<google font name>",
-    "borderRadius": "<css value>",
-    "mode": "light" | "dark"
-  },
-  "layout": {
-    "headerStyle": "centered" | "left-aligned" | "transparent",
-    "footerStyle": "minimal" | "full" | "none",
-    "maxWidth": "<css value>"
-  },
-  "sections": [
-    {
-      "type": "hero" | "services" | "about" | "testimonials" | "gallery" | "contact" | "faq" | "pricing" | "team" | "cta" | "custom",
-      "order": <number>,
-      "isVisible": true,
-      "config": { <section-specific config> }
-    }
-  ],
-  "seo": {
-    "title": "<page title>",
-    "description": "<meta description>",
-    "ogImage": "",
-    "favicon": ""
-  },
-  "customCSS": "",
-  "customHeadHTML": ""
-}
-
-Section config details:
-- hero: { headline, subtitle, ctaText, ctaLink, backgroundStyle, overlayOpacity }
-- services: { title, layout, columns, showPrice, showDuration, showCapacity }
-- about: { title, content, showImage, layout }
-- testimonials: { title, layout, maxItems, items: [{ text, author, rating }] }
-- gallery: { title, layout, columns, maxImages, images: [] }
-- contact: { title, showMap, showForm, showPhone, showEmail }
-- faq: { title, items: [{ question, answer }] }
-- pricing: { title, layout, showComparison }
-- team: { title, layout, columns, members: [] }
-- cta: { title, subtitle, buttonText }
-
-Rules:
-- Return ONLY valid JSON, no markdown, no explanation
-- Use real, professional copy appropriate for the business type
-- Include at least 6 sections
-- Colors must be valid hex codes
-- Font must be a real Google Font`;
-
     const userPrompt = [
-      businessType ? `Business type: ${businessType}` : null,
-      designStyle ? `Design style: ${designStyle}` : null,
-      description ? `Description: ${description}` : null,
+      businessType ? `Business: ${businessType}` : null,
+      designStyle ? `Style: ${designStyle}` : null,
+      description ? `Brief: ${description}` : null,
+      '',
+      'Build the complete JSON config now. Make every word earn its place — this site has to convert visitors into bookings.',
     ]
-      .filter(Boolean)
+      .filter((line) => line !== null)
       .join('\n');
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch(ANTHROPIC_API, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': this.apiKey,
-        'anthropic-version': '2023-06-01',
+        'anthropic-version': ANTHROPIC_VERSION,
       },
       body: JSON.stringify({
         model: this.model,
         max_tokens: this.maxTokens,
-        messages: [
-          { role: 'user', content: userPrompt || 'Create a modern booking website for a general business' },
+        // Cache the static schema — second call onward, this part costs ~10%.
+        system: [
+          {
+            type: 'text',
+            text: SCHEMA_SYSTEM,
+            cache_control: { type: 'ephemeral' },
+          },
         ],
-        system: systemPrompt,
+        messages: [
+          {
+            role: 'user',
+            content: userPrompt || 'Build a premium booking website for a general venue.',
+          },
+        ],
       }),
     });
 
@@ -152,7 +148,13 @@ Rules:
 
     const data = await response.json();
 
-    // Extract the text content from Claude's response
+    // Log cache effectiveness for monitoring
+    if (data.usage) {
+      this.logger.log(
+        `Tokens — input: ${data.usage.input_tokens}, cached_read: ${data.usage.cache_read_input_tokens || 0}, cached_write: ${data.usage.cache_creation_input_tokens || 0}, output: ${data.usage.output_tokens}`,
+      );
+    }
+
     const textContent = data.content?.find(
       (block: any) => block.type === 'text',
     );
@@ -161,7 +163,6 @@ Rules:
       throw new Error('No text content in Claude response');
     }
 
-    // Parse the JSON (Claude might wrap it in ```json blocks)
     let jsonStr = textContent.text.trim();
 
     // Strip markdown code fences if present
@@ -172,7 +173,6 @@ Rules:
 
     const parsed = JSON.parse(jsonStr);
 
-    // Validate essential structure
     if (!parsed.theme || !parsed.sections || !Array.isArray(parsed.sections)) {
       throw new Error('Invalid config structure returned by AI');
     }
@@ -183,7 +183,6 @@ Rules:
   /**
    * Edit a specific section, theme, or layout using AI.
    * Returns partial config to be merged into the existing document.
-   * Throws on failure so the controller can return a proper error.
    */
   async editSectionWithAI(
     currentConfig: any,
@@ -202,31 +201,11 @@ Rules:
     if (target === 'theme') {
       currentData = currentConfig.theme;
       responseKey = 'theme';
-      schemaDescription = `Return JSON with a "theme" key containing ONLY the changed fields.
-Valid fields:
-{
-  "theme": {
-    "primaryColor": "#hex",
-    "secondaryColor": "#hex",
-    "backgroundColor": "#hex",
-    "textColor": "#hex",
-    "fontFamily": "Google Font name",
-    "borderRadius": "CSS value like 0.5rem",
-    "mode": "light" or "dark"
-  }
-}`;
+      schemaDescription = `{ "theme": { "primaryColor": "#hex", "secondaryColor": "#hex", "backgroundColor": "#hex", "textColor": "#hex", "fontFamily": "<Google Font>", "borderRadius": "<rem>", "mode": "light"|"dark" } }`;
     } else if (target === 'layout') {
       currentData = currentConfig.layout;
       responseKey = 'layout';
-      schemaDescription = `Return JSON with a "layout" key containing ONLY the changed fields.
-Valid fields:
-{
-  "layout": {
-    "headerStyle": "centered" | "left-aligned" | "transparent",
-    "footerStyle": "minimal" | "full" | "none",
-    "maxWidth": "CSS value like 1280px"
-  }
-}`;
+      schemaDescription = `{ "layout": { "headerStyle": "centered"|"left-aligned"|"transparent", "footerStyle": "minimal"|"full"|"none", "maxWidth": "<px>" } }`;
     } else if (target === 'section' && sectionIndex !== undefined) {
       const section = currentConfig.sections?.[sectionIndex];
       if (!section) throw new Error('Section not found');
@@ -237,33 +216,31 @@ Valid fields:
       throw new Error('Invalid edit target');
     }
 
-    const systemPrompt = `You are a web design AI assistant. The user wants to edit part of their booking website.
+    const systemPrompt = `You edit a single piece of a booking website's JSON config.
 
-CURRENT DATA:
+CURRENT:
 ${JSON.stringify(currentData, null, 2)}
 
-RESPONSE FORMAT:
-${schemaDescription}
+RETURN: ${schemaDescription}
 
-RULES:
-- Return ONLY valid JSON. No markdown fences, no explanation, no extra text.
-- Only include fields that need to change based on the user's request.
-- Colors MUST be valid 6-digit hex codes (e.g. "#FF5733").
-- Font names must be real Google Fonts.
-- All text content should be professional and appropriate.
-- For images, use placeholder URLs like "https://placehold.co/800x600/HEXCOLOR/HEXCOLOR?text=Description" where HEXCOLOR matches the theme.
-- Keep arrays complete — if adding items to an existing array, include ALL items (old + new).`;
+Rules:
+- ONLY valid JSON. No markdown, no commentary.
+- Only include fields you're changing.
+- Hex colors must be 6 digits (#FF5733). Fonts must be real Google Fonts.
+- Copy stays specific and benefit-led, never generic.
+- For images use https://placehold.co/800x600/HEXCOLOR/HEXCOLOR?text=Description.
+- When editing arrays (testimonials, faq items, etc.), include the FULL updated array — old items + new.`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch(ANTHROPIC_API, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': this.apiKey,
-        'anthropic-version': '2023-06-01',
+        'anthropic-version': ANTHROPIC_VERSION,
       },
       body: JSON.stringify({
         model: this.model,
-        max_tokens: 2048,
+        max_tokens: 1500, // edits are smaller than full generation
         messages: [{ role: 'user', content: prompt }],
         system: systemPrompt,
       }),
@@ -282,7 +259,6 @@ RULES:
     }
 
     let jsonStr = textContent.text.trim();
-    // Strip markdown code fences if present
     const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) jsonStr = jsonMatch[1].trim();
 
@@ -296,133 +272,31 @@ RULES:
       throw new Error('AI returned an invalid response. Please rephrase your prompt and try again.');
     }
 
-    // Normalize response: the AI might return { theme: {...} } or { sectionConfig: {...} }
-    // or just the raw values — handle all cases
     if (responseKey === 'theme') {
       return { theme: parsed.theme || parsed };
     } else if (responseKey === 'layout') {
       return { layout: parsed.layout || parsed };
     } else {
-      // For sections, AI might return { sectionConfig: {...} } or { config: {...} } or raw values
       return { sectionConfig: parsed.sectionConfig || parsed.config || parsed };
     }
   }
 
   /**
-   * Get detailed schema for a specific section type so the AI knows exactly what fields to return.
+   * Compact section schemas — Opus reads these fine without verbose comments.
    */
   private getSectionSchema(sectionType: string): string {
     const schemas: Record<string, string> = {
-      hero: `Return JSON with a "sectionConfig" key:
-{
-  "sectionConfig": {
-    "headline": "Main heading text",
-    "subtitle": "Subtitle or subheading",
-    "ctaText": "Button text like Book Now",
-    "backgroundImage": "URL to background image (optional)",
-    "backgroundColor": "#hex background color (optional)"
-  }
-}`,
-      services: `Return JSON with a "sectionConfig" key:
-{
-  "sectionConfig": {
-    "title": "Section heading",
-    "columns": 3,
-    "showPrice": true,
-    "showDuration": true,
-    "showCapacity": true,
-    "backgroundColor": "#hex background color (optional)"
-  }
-}`,
-      about: `Return JSON with a "sectionConfig" key:
-{
-  "sectionConfig": {
-    "title": "Section heading",
-    "content": "Full about-us paragraph text",
-    "showImage": true,
-    "layout": "centered" or "side-by-side",
-    "backgroundColor": "#hex background color (optional)"
-  }
-}`,
-      testimonials: `Return JSON with a "sectionConfig" key:
-{
-  "sectionConfig": {
-    "title": "Section heading",
-    "items": [
-      { "text": "Review text", "author": "Customer name", "rating": 5 }
-    ],
-    "backgroundColor": "#hex background color (optional)"
-  }
-}`,
-      gallery: `Return JSON with a "sectionConfig" key:
-{
-  "sectionConfig": {
-    "title": "Section heading",
-    "columns": 3,
-    "images": [
-      { "url": "https://placehold.co/800x600?text=Image+Description", "alt": "Image description", "caption": "Optional caption" }
-    ],
-    "backgroundColor": "#hex background color (optional)"
-  }
-}`,
-      contact: `Return JSON with a "sectionConfig" key:
-{
-  "sectionConfig": {
-    "title": "Section heading",
-    "phone": "Phone number",
-    "email": "Email address",
-    "address": "Street address",
-    "showMap": true,
-    "showForm": true,
-    "backgroundColor": "#hex background color (optional)"
-  }
-}`,
-      faq: `Return JSON with a "sectionConfig" key:
-{
-  "sectionConfig": {
-    "title": "Section heading",
-    "items": [
-      { "question": "Question text", "answer": "Answer text" }
-    ],
-    "backgroundColor": "#hex background color (optional)"
-  }
-}`,
-      pricing: `Return JSON with a "sectionConfig" key:
-{
-  "sectionConfig": {
-    "title": "Section heading",
-    "subtitle": "Optional subtitle",
-    "backgroundColor": "#hex background color (optional)"
-  }
-}`,
-      team: `Return JSON with a "sectionConfig" key:
-{
-  "sectionConfig": {
-    "title": "Section heading",
-    "columns": 4,
-    "members": [
-      { "name": "Full name", "role": "Job title", "bio": "Short bio", "image": "URL" }
-    ],
-    "backgroundColor": "#hex background color (optional)"
-  }
-}`,
-      cta: `Return JSON with a "sectionConfig" key:
-{
-  "sectionConfig": {
-    "title": "Main heading",
-    "subtitle": "Supporting text",
-    "buttonText": "Button label",
-    "backgroundColor": "#hex background color (optional)"
-  }
-}`,
-      custom: `Return JSON with a "sectionConfig" key:
-{
-  "sectionConfig": {
-    "title": "Section heading",
-    "content": "HTML or text content",
-    "backgroundColor": "#hex background color (optional)"
-  }
-}`,
+      hero: `{ "sectionConfig": { "headline": "<8 words", "subtitle": "<18 words", "ctaText": "Book Now", "backgroundImage": "<optional URL>", "backgroundColor": "<optional #hex>" } }`,
+      services: `{ "sectionConfig": { "title": "<heading>", "columns": 3, "showPrice": true, "showDuration": true, "showCapacity": true, "backgroundColor": "<optional #hex>" } }`,
+      about: `{ "sectionConfig": { "title": "<heading>", "content": "<~80 words>", "layout": "centered"|"side-by-side", "showImage": true, "backgroundColor": "<optional #hex>" } }`,
+      testimonials: `{ "sectionConfig": { "title": "<heading>", "items": [{ "text": "<~25 words>", "author": "<First L.>", "rating": 4|5 }], "backgroundColor": "<optional #hex>" } }`,
+      gallery: `{ "sectionConfig": { "title": "<heading>", "columns": 3, "images": [{ "url": "https://placehold.co/800x600?text=...", "alt": "<desc>", "caption": "<optional>" }], "backgroundColor": "<optional #hex>" } }`,
+      contact: `{ "sectionConfig": { "title": "<heading>", "phone": "<+91 ...>", "email": "<...>", "address": "<street>", "showMap": true, "showForm": true, "backgroundColor": "<optional #hex>" } }`,
+      faq: `{ "sectionConfig": { "title": "<heading>", "items": [{ "question": "<...>", "answer": "<2-3 sentences>" }], "backgroundColor": "<optional #hex>" } }`,
+      pricing: `{ "sectionConfig": { "title": "<heading>", "subtitle": "<optional>", "backgroundColor": "<optional #hex>" } }`,
+      team: `{ "sectionConfig": { "title": "<heading>", "columns": 4, "members": [{ "name": "<full>", "role": "<title>", "bio": "<short>", "image": "<URL>" }], "backgroundColor": "<optional #hex>" } }`,
+      cta: `{ "sectionConfig": { "title": "<heading>", "subtitle": "<supporting>", "buttonText": "<label>", "backgroundColor": "<optional #hex>" } }`,
+      custom: `{ "sectionConfig": { "title": "<heading>", "content": "<text>", "backgroundColor": "<optional #hex>" } }`,
     };
 
     return schemas[sectionType] || schemas.custom;

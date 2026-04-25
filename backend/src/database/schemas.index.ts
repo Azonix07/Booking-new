@@ -9,3 +9,5 @@ export { WebsiteConfig, WebsiteConfigSchema, WebsiteConfigDocument, WebsiteStatu
 export { Payment, PaymentSchema, PaymentDocument, PaymentStatus, PaymentProvider } from '../modules/payments/schemas/payment.schema';
 export { Domain, DomainSchema, DomainDocument, SslStatus } from '../modules/domains/schemas/domain.schema';
 export { Review, ReviewSchema, ReviewDocument } from '../modules/reviews/schemas/review.schema';
+export { ServiceRequest, ServiceRequestSchema, ServiceRequestDocument, ServiceRequestStatus, ServiceCategory } from '../modules/service-requests/schemas/service-request.schema';
+export { TrackingSession, TrackingSessionSchema, TrackingSessionDocument, TrackingStatus } from '../modules/service-requests/schemas/tracking-session.schema';

@@ -290,6 +290,78 @@ export interface DashboardStats {
   activeServices: number;
 }
 
+// ─── On-Demand Service Requests ──────────────────────────────────────────────
+
+export type ServiceRequestStatus =
+  | 'pending'
+  | 'accepted'
+  | 'on_the_way'
+  | 'arrived'
+  | 'working'
+  | 'completed'
+  | 'cancelled';
+
+export type OnDemandCategory =
+  | 'electrician'
+  | 'plumber'
+  | 'carpenter'
+  | 'welder'
+  | 'painter'
+  | 'ac_repair'
+  | 'cleaning'
+  | 'appliance_repair'
+  | 'other';
+
+export interface ServiceRequestData {
+  _id: string;
+  tenantId: string;
+  customerId: any;
+  providerId: any;
+  category: OnDemandCategory;
+  title: string;
+  description: string;
+  status: ServiceRequestStatus;
+  customerLocation: { type: string; coordinates: number[] };
+  customerAddress: string;
+  providerLocation: { type: string; coordinates: number[] };
+  estimatedAmount: number;
+  finalAmount: number;
+  currency: string;
+  acceptedAt: string | null;
+  arrivedAt: string | null;
+  workStartedAt: string | null;
+  completedAt: string | null;
+  etaMinutes: number | null;
+  notes: string;
+  customerRating: number | null;
+  customerReview: string;
+  requestRef: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TrackingSessionData {
+  _id: string;
+  requestId: string;
+  providerId: string;
+  userId: string;
+  currentLocation: { type: string; coordinates: number[] };
+  heading: number;
+  speed: number;
+  status: string;
+  locationHistory: { lat: number; lng: number; timestamp: string }[];
+  etaMinutes: number | null;
+  distanceKm: number | null;
+}
+
+export interface LiveLocation {
+  latitude: number;
+  longitude: number;
+  heading: number;
+  speed: number;
+  timestamp: number;
+}
+
 // ─── API Response wrapper ────────────────────────────────────────────────────
 export interface ApiResponse<T = any> {
   success: boolean;

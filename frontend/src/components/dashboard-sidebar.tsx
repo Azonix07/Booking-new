@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Globe, Settings, Calendar, Palette, Box, Clock,
-  BarChart3, Star, LogOut, Lock, ChevronLeft, Menu, type LucideIcon,
+  BarChart3, Star, LogOut, Lock, ChevronLeft, Menu, Wrench, type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -19,6 +19,7 @@ const sidebarItems: SidebarItem[] = [
   { label: "Services",     href: "/dashboard/services",       icon: Box },
   { label: "Time Slots",   href: "/dashboard/slots",          icon: Clock },
   { label: "Reviews",      href: "/dashboard/reviews",        icon: Star },
+  { label: "Requests",     href: "/dashboard/service-requests", icon: Wrench },
   { label: "Website (AI)", href: "/dashboard/website",        icon: Globe, requiresPlan: ["ai", "full_service"] },
   { label: "Appearance",   href: "/dashboard/website/editor", icon: Palette, requiresPlan: ["standard", "ai", "full_service"] },
   { label: "Analytics",    href: "/dashboard/analytics",      icon: BarChart3 },

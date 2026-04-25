@@ -156,7 +156,7 @@ export default function BookingPage() {
         const t = await api.get<Tenant>(`/shop/by-slug/${slug}`);
         setTenant(t);
         api.setTenantId(t._id);
-        const svc = await api.get<Service[]>(`/services`);
+        const svc = await api.get<Service[]>("/services");
         setServices(Array.isArray(svc) ? svc : []);
         const list = Array.isArray(svc) ? svc : [];
         if (list.length > 0) {

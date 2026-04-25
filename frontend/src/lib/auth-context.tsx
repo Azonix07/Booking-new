@@ -49,15 +49,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     api.setToken(token);
+
+    // Use cached user data for instant load, then revalidate in background
+    const cached = safeStorage.getItem("cachedUser");
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        setUser(parsed);
+        setIsLoading(false);
+      } catch { /* ignore bad cache */ }
+    }
+
     api
       .get<User>("/auth/me")
       .then((u) => {
-        if (u) setUser(u);
+        if (u) {
+          setUser(u);
+          safeStorage.setItem("cachedUser", JSON.stringify(u));
+        }
       })
       .catch(() => {
         safeStorage.removeItem("accessToken");
         safeStorage.removeItem("refreshToken");
+        safeStorage.removeItem("cachedUser");
         api.setToken(null);
+        setUser(null);
       })
       .finally(() => setIsLoading(false));
   }, []);
@@ -103,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     api.post("/auth/logout").catch(() => {});
     safeStorage.removeItem("accessToken");
     safeStorage.removeItem("refreshToken");
+    safeStorage.removeItem("cachedUser");
     api.setToken(null);
     setUser(null);
   }, []);

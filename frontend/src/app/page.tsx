@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { HeroCarousel } from "@/components/home/hero-carousel";
 import { api } from "@/lib/api";
@@ -53,6 +52,11 @@ export default function HomePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [location, setLocation] = useState<PlaceSuggestion | null>(null);
   const [visibleCount, setVisibleCount] = useState(12);
+
+  const visibleBusinesses = useMemo(
+    () => businesses.slice(0, visibleCount),
+    [businesses, visibleCount]
+  );
 
   // Listen for location changes from the navbar
   useEffect(() => {
@@ -345,7 +349,7 @@ export default function HomePage() {
           ) : (
             <>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {businesses.slice(0, visibleCount).map((biz, i) => (
+              {visibleBusinesses.map((biz, i) => (
                 <div key={biz._id} className="fade-in-up" style={{ animationDelay: `${Math.min(i * 0.04, 0.4)}s` }}>
                   <BusinessSlotCard business={biz} />
                 </div>
@@ -434,7 +438,6 @@ const ACCENT_SETS = [
 ];
 
 function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
-  const router = useRouter();
   const initial = business.name?.charAt(0)?.toUpperCase() || "B";
   const categoryLabel = business.category?.replace(/-/g, " ") || "";
 
@@ -450,10 +453,10 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
       : null;
 
   return (
-    <div
-      onClick={() => router.push(`/book/${business.slug}`)}
+    <Link
+      href={`/book/${business.slug}`}
       className={cn(
-        "group relative cursor-pointer rounded-2xl bg-white border overflow-hidden shadow-sm transition-all duration-300",
+        "group relative block rounded-2xl bg-white border overflow-hidden shadow-sm transition-all duration-300",
         "hover:shadow-2xl hover:-translate-y-1.5 hover:border-primary/40",
         isPremium
           ? "border-amber-200/80 hover:border-amber-300 shadow-amber-100/40"
@@ -503,10 +506,7 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
 
         {/* Bottom-left: live indicator */}
         <div className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/95 text-white shadow-md backdrop-blur-md flex items-center gap-1.5">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-white opacity-75 animate-ping" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
-          </span>
+          <span className="inline-flex h-1.5 w-1.5 rounded-full bg-white" />
           Live
         </div>
 
@@ -591,7 +591,7 @@ function BusinessSlotCard({ business }: { business: MarketplaceBusiness }) {
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 

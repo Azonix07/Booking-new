@@ -31,13 +31,12 @@ interface RazorpayCheckoutOptions {
 export function useRazorpay() {
   const scriptLoaded = useRef(false);
 
-  useEffect(() => {
+  const loadScript = useCallback(() => {
     if (scriptLoaded.current || typeof window === "undefined") return;
     if (document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
       scriptLoaded.current = true;
       return;
     }
-
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
@@ -48,8 +47,17 @@ export function useRazorpay() {
   }, []);
 
   const openCheckout = useCallback((opts: RazorpayCheckoutOptions) => {
+    // Lazy-load if not yet loaded
     if (!window.Razorpay) {
-      opts.onFailure(new Error("Razorpay SDK not loaded"));
+      loadScript();
+      // Give it a moment to load, then retry
+      setTimeout(() => {
+        if (!window.Razorpay) {
+          opts.onFailure(new Error("Razorpay SDK not loaded"));
+          return;
+        }
+        openCheckout(opts);
+      }, 1500);
       return;
     }
 
@@ -91,7 +99,7 @@ export function useRazorpay() {
     });
 
     rzp.open();
-  }, []);
+  }, [loadScript]);
 
-  return { openCheckout };
+  return { openCheckout, loadScript };
 }

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import type { MarketplaceBusiness } from "@/lib/types";
@@ -58,13 +57,7 @@ export function NearbySection() {
   return (
     <section className="py-20 sm:py-24 px-4 sm:px-6">
       <div className="mx-auto max-w-6xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.5 }}
-          className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10"
-        >
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
           <div>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
               Near You
@@ -88,7 +81,7 @@ export function NearbySection() {
               Use my location
             </Button>
           )}
-        </motion.div>
+        </div>
 
         {loc.phase === "idle" && (
           <EmptyState
@@ -123,16 +116,10 @@ export function NearbySection() {
                   ))
                 : businesses.length === 0
                   ? null
-                  : businesses.map((b, i) => (
-                      <motion.div
-                        key={b._id}
-                        initial={{ opacity: 0, y: 16 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: "-40px" }}
-                        transition={{ duration: 0.35, delay: (i % 3) * 0.08 }}
-                      >
+                  : businesses.map((b) => (
+                      <div key={b._id}>
                         <BusinessCard business={b} showDistance />
-                      </motion.div>
+                      </div>
                     ))}
             </div>
 

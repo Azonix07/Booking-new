@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { api } from "@/lib/api";
 import type { MarketplaceBusiness } from "@/lib/types";
@@ -25,13 +24,7 @@ export function FeaturedBusinesses() {
   return (
     <section className="py-20 sm:py-24 px-4 sm:px-6 bg-muted/30">
       <div className="mx-auto max-w-6xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.5 }}
-          className="flex items-end justify-between mb-10"
-        >
+        <div className="flex items-end justify-between mb-10">
           <div>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
               Featured Businesses
@@ -46,21 +39,15 @@ export function FeaturedBusinesses() {
               <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
             </Button>
           </Link>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {featured === null
             ? Array.from({ length: 6 }).map((_, i) => <BusinessCardSkeleton key={i} />)
-            : featured.slice(0, 6).map((biz, i) => (
-                <motion.div
-                  key={biz._id}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.35, delay: (i % 3) * 0.08 }}
-                >
+            : featured.slice(0, 6).map((biz) => (
+                <div key={biz._id}>
                   <BusinessCard business={biz} />
-                </motion.div>
+                </div>
               ))}
         </div>
 

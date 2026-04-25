@@ -343,6 +343,7 @@ export default function HomePage() {
               </div>
             </div>
           ) : (
+            <>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {businesses.slice(0, visibleCount).map((biz, i) => (
                 <div key={biz._id} className="fade-in-up" style={{ animationDelay: `${Math.min(i * 0.04, 0.4)}s` }}>
@@ -363,6 +364,7 @@ export default function HomePage() {
                 </Button>
               </div>
             )}
+            </>
           )}
         </div>
 

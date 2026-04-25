@@ -42,6 +42,7 @@ import { LocationModule } from './modules/location/location.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { FullServiceModule } from './modules/full-service/full-service.module';
+import { AiAssistantModule } from './modules/ai-assistant/ai-assistant.module';
 import { TasksModule } from './tasks/tasks.module';
 import { HealthController } from './health.controller';
 
@@ -107,6 +108,7 @@ import { Subscription, SubscriptionSchema } from './modules/subscriptions/schema
     AdminModule,
     SubscriptionsModule,
     FullServiceModule,
+    AiAssistantModule,
     TasksModule,
   ],
   controllers: [HealthController],

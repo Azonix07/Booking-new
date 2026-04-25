@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Loader2, Gamepad2, Monitor, Headphones, Box, BedDouble, Volleyball, Briefcase, PartyPopper, ArrowRight, Info, Sparkles } from "lucide-react";
+import { Plus, Trash2, Loader2, Gamepad2, Monitor, Headphones, Box, BedDouble, Volleyball, Briefcase, PartyPopper, ArrowRight, Info, Sparkles, Map } from "lucide-react";
+import { FloorPlanner } from "@/components/floor-planner";
 
 const DEVICE_PRESETS: Record<string, { name: string; devices: number; playersPerDevice: number; bookingMode?: string; totalUnits?: number; unitType?: string; icon: any }[]> = {
   "gaming-lounge": [
@@ -152,6 +153,7 @@ export default function StepServices({ data, businessType, onSave, saving }: Pro
 
   const presets = DEVICE_PRESETS[businessType] || [];
   const validCount = services.filter((s) => s.name.trim()).length;
+  const [showFloorPlanner, setShowFloorPlanner] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -328,6 +330,40 @@ export default function StepServices({ data, businessType, onSave, saving }: Pro
         <Plus className="h-4 w-4" />
         {services.length === 0 ? "Add your first service" : "Add another"}
       </Button>
+
+      {/* Floor Planner toggle */}
+      {validCount > 0 && (
+        <div className="space-y-3">
+          <button
+            onClick={() => setShowFloorPlanner(!showFloorPlanner)}
+            className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                <Map className="h-4 w-4 text-primary" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-foreground">Floor Plan Designer</p>
+                <p className="text-xs text-muted-foreground">Map your space — drag & drop devices, AI auto-layout</p>
+              </div>
+            </div>
+            <span className="text-xs font-medium text-primary">{showFloorPlanner ? "Hide" : "Open"}</span>
+          </button>
+
+          {showFloorPlanner && (
+            <div className="rounded-xl border border-border/60 p-4 bg-muted/20">
+              <FloorPlanner
+                category={businessType}
+                services={services.filter((s) => s.name.trim()).map((s) => ({
+                  name: s.name,
+                  numberOfDevices: s.numberOfDevices,
+                  maxPlayersPerDevice: s.maxPlayersPerDevice,
+                }))}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center justify-between pt-2">
         <p className="text-xs text-muted-foreground">

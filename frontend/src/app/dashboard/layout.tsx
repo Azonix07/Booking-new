@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
+import { AiAssistantWidget } from "@/components/ai-assistant-widget";
 import { redirect } from "next/navigation";
 import { useEffect } from "react";
 
@@ -35,6 +36,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1 overflow-auto">
         <div className="p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto">{children}</div>
       </main>
+      <AiAssistantWidget context="dashboard" />
     </div>
   );
 }

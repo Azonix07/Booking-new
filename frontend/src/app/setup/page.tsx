@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,6 +34,7 @@ import StepPricing from "@/components/wizard/step-pricing";
 import StepPaymentMethod from "@/components/wizard/step-payment-method";
 import StepCustomerFields from "@/components/wizard/step-customer-fields";
 import StepReview from "@/components/wizard/step-review";
+import { AiAssistantWidget } from "@/components/ai-assistant-widget";
 
 const STEPS = [
   { id: 1, label: "Business", fullLabel: "Business Type", key: "business_type", icon: Building2, estMin: 1 },
@@ -87,6 +88,47 @@ export default function SetupWizardPage() {
     paymentMethod: null,
     customerFields: null,
   });
+
+  // ── AI confusion detection ────────────────────────────────────────────────
+  const [proactiveHelp, setProactiveHelp] = useState<string | null>(null);
+  const stepTimerRef = useRef<number>(0);
+  const confusionCheckedRef = useRef<boolean>(false);
+
+  // Track time on current step for confusion detection
+  useEffect(() => {
+    stepTimerRef.current = 0;
+    confusionCheckedRef.current = false;
+    const interval = setInterval(() => {
+      stepTimerRef.current += 1;
+      // After 45 seconds on a step without completing it, show proactive help
+      if (stepTimerRef.current >= 45 && !confusionCheckedRef.current) {
+        confusionCheckedRef.current = true;
+        const stepKey = STEPS[currentStep - 1]?.key;
+        if (stepKey && !completedSteps.includes(stepKey)) {
+          detectConfusion(stepKey);
+        }
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [currentStep, completedSteps]);
+
+  const detectConfusion = async (stepKey: string) => {
+    try {
+      const res = await api.post<{ shouldHelp: boolean; message?: string }>(
+        "/ai-assistant/detect-confusion",
+        {
+          currentStep: stepKey,
+          wizardData,
+          timeOnStep: stepTimerRef.current,
+        },
+      );
+      if (res.shouldHelp && res.message) {
+        setProactiveHelp(res.message);
+      }
+    } catch {
+      // Silently fail — not critical
+    }
+  };
 
   // Auth guard
   useEffect(() => {
@@ -547,6 +589,14 @@ export default function SetupWizardPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* AI Assistant Widget — always available during setup */}
+      <AiAssistantWidget
+        context="setup_wizard"
+        currentStep={STEPS[currentStep - 1]?.key}
+        wizardData={wizardData as any}
+        proactiveMessage={proactiveHelp}
+      />
     </div>
   );
 }

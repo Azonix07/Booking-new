@@ -161,10 +161,12 @@ export function HeroCarousel() {
       aria-roledescription="carousel"
       aria-label="Featured content"
     >
-      {/* Slide track */}
+      {/* Slide track — only mount active + adjacent slides for performance */}
       <div className="relative h-[320px] sm:h-[360px] lg:h-[380px]">
         {SLIDES.map((slide, i) => {
           const isActive = i === index;
+          const isAdjacent = i === ((index - 1 + total) % total) || i === ((index + 1) % total);
+          if (!isActive && !isAdjacent) return null;
           return (
             <div
               key={i}
@@ -174,7 +176,7 @@ export function HeroCarousel() {
               aria-hidden={!isActive}
             >
               {slide.kind === "hero" && <HeroSlide />}
-              {slide.kind === "ad" && <AdSlide slide={slide} />}
+              {slide.kind === "ad" && <AdSlide slide={slide} isActive={isActive} />}
               {slide.kind === "promote" && <PromoteSlide />}
             </div>
           );
@@ -281,7 +283,7 @@ function HeroSlide() {
 
 // ─── Slide: sponsored ad ─────────────────────────────────────────────────────
 
-function AdSlide({ slide }: { slide: Extract<Slide, { kind: "ad" }> }) {
+function AdSlide({ slide, isActive }: { slide: Extract<Slide, { kind: "ad" }>; isActive: boolean }) {
   const BadgeIcon = slide.badgeIcon;
   return (
     <div className="relative h-full overflow-hidden">
@@ -291,7 +293,8 @@ function AdSlide({ slide }: { slide: Extract<Slide, { kind: "ad" }> }) {
         src={slide.image}
         alt={slide.imageAlt}
         className="absolute inset-0 h-full w-full object-cover"
-        loading="lazy"
+        loading={isActive ? "eager" : "lazy"}
+        fetchPriority={isActive ? "high" : "low"}
       />
       {/* Gradient tint */}
       <div className={`absolute inset-0 bg-gradient-to-r ${slide.tint}`} />

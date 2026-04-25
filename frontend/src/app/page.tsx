@@ -52,6 +52,7 @@ export default function HomePage() {
   const [sortBy, setSortBy] = useState("rating");
   const [showFilters, setShowFilters] = useState(false);
   const [location, setLocation] = useState<PlaceSuggestion | null>(null);
+  const [visibleCount, setVisibleCount] = useState(12);
 
   // Listen for location changes from the navbar
   useEffect(() => {
@@ -72,15 +73,15 @@ export default function HomePage() {
         params.set("latitude", location.latitude.toString());
         params.set("longitude", location.longitude.toString());
         params.set("radiusKm", "50");
-        params.set("limit", "40");
+        params.set("limit", "50");
         if (activeCategory) params.set("category", activeCategory);
         const resp = await api.get<any>(`/marketplace/nearby?${params}`);
         data = resp?.businesses || resp || [];
       } else if (activeCategory) {
-        const resp = await api.get<any>(`/marketplace/browse?category=${encodeURIComponent(activeCategory)}&limit=40`);
+        const resp = await api.get<any>(`/marketplace/browse?category=${encodeURIComponent(activeCategory)}&limit=50`);
         data = resp?.businesses || resp || [];
       } else {
-        const resp = await api.get<any>(`/marketplace/featured?limit=40`);
+        const resp = await api.get<any>(`/marketplace/featured?limit=50`);
         data = resp || [];
       }
 
@@ -104,6 +105,7 @@ export default function HomePage() {
       });
 
       setBusinesses(results);
+      setVisibleCount(12);
     } catch {
       setBusinesses([]);
     } finally {
@@ -342,12 +344,25 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {businesses.map((biz, i) => (
+              {businesses.slice(0, visibleCount).map((biz, i) => (
                 <div key={biz._id} className="fade-in-up" style={{ animationDelay: `${Math.min(i * 0.04, 0.4)}s` }}>
                   <BusinessSlotCard business={biz} />
                 </div>
               ))}
             </div>
+            {businesses.length > visibleCount && (
+              <div className="mt-8 text-center">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="rounded-xl gap-2"
+                  onClick={() => setVisibleCount((c) => c + 12)}
+                >
+                  Show more venues ({businesses.length - visibleCount} remaining)
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           )}
         </div>
 

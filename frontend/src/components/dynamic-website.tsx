@@ -2,9 +2,7 @@
 
 import type { WebsiteConfig, WebsiteSection, Tenant, Service } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Clock, Phone, Mail, ArrowRight, ChevronRight, ChevronDown, Users } from "lucide-react";
+import { Star, MapPin, Clock, Phone, Mail, ArrowRight, ChevronRight, ChevronDown, Users, Sparkles, Sunrise, Sun, Sunset, Moon, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import { useState } from "react";
@@ -202,39 +200,167 @@ interface SectionWithServicesProps extends SectionWithTenantProps {
 // ─── Hero ────────────────────────────────────────────────────────────────────
 
 function HeroSection({ cfg, tenant, theme, maxWidth }: SectionWithTenantProps) {
+  const heroBg = cfg.backgroundImage;
+  const cityLine = [tenant.address?.city, tenant.address?.state].filter(Boolean).join(", ");
+
   return (
     <section
-      className="relative py-28 px-6 text-center overflow-hidden"
+      className="relative py-20 sm:py-28 px-6 overflow-hidden"
       style={{
-        background: `linear-gradient(135deg, ${theme.primaryColor}15, ${theme.backgroundColor}, ${theme.secondaryColor}15)`,
+        background: heroBg
+          ? `linear-gradient(135deg, ${theme.primaryColor}33, transparent), url(${heroBg}) center/cover`
+          : `linear-gradient(135deg, ${theme.primaryColor}18, ${theme.backgroundColor}, ${theme.secondaryColor}18)`,
       }}
     >
-      <div className="mx-auto relative z-10" style={{ maxWidth }}>
-        <h1
-          className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl"
-          style={{ color: theme.textColor }}
-        >
-          {cfg.headline || cfg.title || tenant.name}
-        </h1>
-        <p
-          className="mt-5 text-lg sm:text-xl max-w-2xl mx-auto"
-          style={{ color: `color-mix(in srgb, ${theme.textColor} 70%, transparent)` }}
-        >
-          {cfg.subtitle || cfg.subheadline || tenant.description || "Welcome to our business"}
-        </p>
-        <Link href={`/book/${tenant.slug}`}>
-          <Button
-            size="lg"
-            className="mt-8 text-base px-8 py-6 shadow-lg hover:shadow-xl transition-all"
-            style={{
-              backgroundColor: theme.primaryColor,
-              color: "#fff",
-              borderRadius: theme.borderRadius,
-            }}
-          >
-            {cfg.ctaText || "Book Now"} <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
-        </Link>
+      {/* Decorative blobs */}
+      <div
+        className="absolute -top-32 -right-32 w-96 h-96 rounded-full blur-3xl opacity-40"
+        style={{ background: theme.primaryColor }}
+        aria-hidden
+      />
+      <div
+        className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full blur-3xl opacity-30"
+        style={{ background: theme.secondaryColor }}
+        aria-hidden
+      />
+
+      <div className="relative z-10 mx-auto" style={{ maxWidth }}>
+        <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-10 items-center">
+          {/* LEFT: copy */}
+          <div>
+            {/* Kicker */}
+            <div
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider mb-5 backdrop-blur-md"
+              style={{
+                backgroundColor: `color-mix(in srgb, ${theme.primaryColor} 12%, transparent)`,
+                color: theme.primaryColor,
+                border: `1px solid color-mix(in srgb, ${theme.primaryColor} 25%, transparent)`,
+              }}
+            >
+              <Sparkles className="h-3 w-3" />
+              {cityLine ? `Now booking in ${cityLine}` : "Live online booking"}
+            </div>
+
+            <h1
+              className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl leading-[1.05]"
+              style={{ color: theme.textColor }}
+            >
+              {cfg.headline || cfg.title || tenant.name}
+            </h1>
+            <p
+              className="mt-5 text-lg sm:text-xl max-w-xl leading-relaxed"
+              style={{ color: `color-mix(in srgb, ${theme.textColor} 70%, transparent)` }}
+            >
+              {cfg.subtitle || cfg.subheadline || tenant.description || "Real-time availability. Instant confirmation. Your spot, locked in."}
+            </p>
+
+            {/* CTA pair */}
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link href={`/book/${tenant.slug}`}>
+                <Button
+                  size="lg"
+                  className="text-base px-8 h-14 shadow-xl hover:scale-[1.02] transition-all"
+                  style={{
+                    backgroundColor: theme.primaryColor,
+                    color: "#fff",
+                    borderRadius: theme.borderRadius,
+                  }}
+                >
+                  {cfg.ctaText || "Book Now"} <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <a href="#services">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-base px-6 h-14 backdrop-blur-md"
+                  style={{
+                    borderColor: `color-mix(in srgb, ${theme.textColor} 20%, transparent)`,
+                    color: theme.textColor,
+                    backgroundColor: `color-mix(in srgb, ${theme.backgroundColor} 60%, transparent)`,
+                    borderRadius: theme.borderRadius,
+                  }}
+                >
+                  See services
+                </Button>
+              </a>
+            </div>
+
+            {/* Trust strip */}
+            <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm" style={{ color: `color-mix(in srgb, ${theme.textColor} 65%, transparent)` }}>
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4" style={{ color: theme.primaryColor }} />
+                Instant confirmation
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4" style={{ color: theme.primaryColor }} />
+                Free cancellation
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4" style={{ color: theme.primaryColor }} />
+                Secure payments
+              </span>
+            </div>
+          </div>
+
+          {/* RIGHT: live booking card — feels modern, signals "ready to book now" */}
+          <div className="hidden lg:block">
+            <div
+              className="rounded-2xl border shadow-2xl backdrop-blur-md p-6"
+              style={{
+                backgroundColor: `color-mix(in srgb, ${theme.backgroundColor} 88%, transparent)`,
+                borderColor: `color-mix(in srgb, ${theme.textColor} 10%, transparent)`,
+                borderRadius: theme.borderRadius,
+              }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
+                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: theme.textColor }}>
+                  Live availability
+                </span>
+              </div>
+
+              <p className="text-sm" style={{ color: `color-mix(in srgb, ${theme.textColor} 60%, transparent)` }}>
+                Today
+              </p>
+              <p className="text-2xl font-bold mt-1" style={{ color: theme.textColor }}>
+                {new Date().toLocaleDateString("en-IN", { weekday: "long", month: "short", day: "numeric" })}
+              </p>
+
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"].map((t) => (
+                  <div
+                    key={t}
+                    className="text-center py-2.5 rounded-lg text-sm font-semibold border"
+                    style={{
+                      borderColor: `color-mix(in srgb, ${theme.primaryColor} 25%, transparent)`,
+                      color: theme.primaryColor,
+                      backgroundColor: `color-mix(in srgb, ${theme.primaryColor} 6%, transparent)`,
+                    }}
+                  >
+                    {t}
+                  </div>
+                ))}
+              </div>
+
+              <Link href={`/book/${tenant.slug}`}>
+                <Button
+                  className="w-full mt-5 h-11"
+                  style={{
+                    backgroundColor: theme.primaryColor,
+                    color: "#fff",
+                    borderRadius: theme.borderRadius,
+                  }}
+                >
+                  See all slots <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -254,75 +380,221 @@ function ServicesSection({ cfg, tenant, services, theme, maxWidth }: SectionWith
   return (
     <section className="py-20 px-6" id="services">
       <div className="mx-auto" style={{ maxWidth }}>
-        <h2 className="text-3xl font-bold text-center mb-3" style={{ color: theme.textColor }}>
-          {cfg.title || "Our Services"}
-        </h2>
-        <p
-          className="text-center mb-10 max-w-xl mx-auto"
-          style={{ color: `color-mix(in srgb, ${theme.textColor} 60%, transparent)` }}
-        >
-          Choose from our selection of services and book online
-        </p>
-        <div className={`grid ${gridClass} gap-6`}>
-          {services.map((svc) => (
-            <div
-              key={svc._id}
-              className="group rounded-xl border p-6 transition-all hover:shadow-lg"
-              style={{
-                borderColor: `color-mix(in srgb, ${theme.textColor} 10%, transparent)`,
-                borderRadius: theme.borderRadius,
-                backgroundColor: config_mix(theme.backgroundColor, theme.primaryColor, 3),
-              }}
-            >
-              <h3 className="font-semibold text-lg" style={{ color: theme.textColor }}>
-                {svc.name}
-              </h3>
-              {svc.description && (
-                <p
-                  className="text-sm mt-2 line-clamp-2"
-                  style={{ color: `color-mix(in srgb, ${theme.textColor} 60%, transparent)` }}
-                >
-                  {svc.description}
-                </p>
-              )}
-              <div className="flex items-center gap-3 mt-3 text-xs" style={{ color: `color-mix(in srgb, ${theme.textColor} 50%, transparent)` }}>
-                {cfg.showDuration && svc.defaultDuration && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" /> {svc.defaultDuration} min
-                  </span>
-                )}
-                {cfg.showCapacity && svc.maxTotalPlayers && (
-                  <span className="flex items-center gap-1">
-                    <Users className="h-3 w-3" /> Up to {svc.maxTotalPlayers}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center justify-between mt-5">
-                {cfg.showPrice !== false && (
-                  <span className="font-bold text-lg" style={{ color: theme.primaryColor }}>
-                    {formatCurrency(svc.price)}
-                  </span>
-                )}
-                <Link href={`/book/${tenant.slug}?service=${svc._id}`}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="group-hover:shadow-sm"
-                    style={{
-                      borderColor: theme.primaryColor,
-                      color: theme.primaryColor,
-                      borderRadius: theme.borderRadius,
-                    }}
-                  >
-                    Book <ChevronRight className="ml-1 h-3 w-3" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          ))}
+        <div className="text-center mb-12">
+          <p
+            className="text-xs font-bold uppercase tracking-wider mb-2"
+            style={{ color: theme.primaryColor }}
+          >
+            What we offer
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ color: theme.textColor }}>
+            {cfg.title || "Our Services"}
+          </h2>
+          <p
+            className="mt-3 text-base max-w-xl mx-auto"
+            style={{ color: `color-mix(in srgb, ${theme.textColor} 60%, transparent)` }}
+          >
+            Pick what you want, choose your time — we&apos;ll handle the rest.
+          </p>
         </div>
+
+        <div className={`grid ${gridClass} gap-5`}>
+          {services.map((svc, i) => {
+            const isHighlight = i === 0; // mark the first as featured
+            return (
+              <div
+                key={svc._id}
+                className="group relative rounded-2xl border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden"
+                style={{
+                  borderColor: isHighlight
+                    ? theme.primaryColor
+                    : `color-mix(in srgb, ${theme.textColor} 10%, transparent)`,
+                  borderWidth: isHighlight ? "2px" : "1px",
+                  borderRadius: theme.borderRadius,
+                  backgroundColor: theme.backgroundColor,
+                }}
+              >
+                {/* Decorative corner */}
+                <div
+                  className="absolute -top-12 -right-12 w-24 h-24 rounded-full opacity-10 group-hover:opacity-20 transition-opacity"
+                  style={{ background: theme.primaryColor }}
+                  aria-hidden
+                />
+
+                {isHighlight && (
+                  <span
+                    className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: theme.primaryColor, color: "#fff" }}
+                  >
+                    Popular
+                  </span>
+                )}
+
+                {/* Service icon tile */}
+                <div
+                  className="h-12 w-12 rounded-xl flex items-center justify-center mb-4 shrink-0"
+                  style={{
+                    backgroundColor: `color-mix(in srgb, ${theme.primaryColor} 12%, transparent)`,
+                    color: theme.primaryColor,
+                  }}
+                >
+                  <Sparkles className="h-5 w-5" />
+                </div>
+
+                <h3 className="font-bold text-lg leading-tight" style={{ color: theme.textColor }}>
+                  {svc.name}
+                </h3>
+                {svc.description && (
+                  <p
+                    className="text-sm mt-2 line-clamp-2 leading-relaxed"
+                    style={{ color: `color-mix(in srgb, ${theme.textColor} 60%, transparent)` }}
+                  >
+                    {svc.description}
+                  </p>
+                )}
+
+                {/* Meta chips */}
+                <div className="flex flex-wrap items-center gap-2 mt-4">
+                  {cfg.showDuration && svc.defaultDuration && (
+                    <span
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md"
+                      style={{
+                        backgroundColor: `color-mix(in srgb, ${theme.textColor} 6%, transparent)`,
+                        color: `color-mix(in srgb, ${theme.textColor} 75%, transparent)`,
+                      }}
+                    >
+                      <Clock className="h-3 w-3" /> {svc.defaultDuration} min
+                    </span>
+                  )}
+                  {cfg.showCapacity && svc.maxTotalPlayers && (
+                    <span
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md"
+                      style={{
+                        backgroundColor: `color-mix(in srgb, ${theme.textColor} 6%, transparent)`,
+                        color: `color-mix(in srgb, ${theme.textColor} 75%, transparent)`,
+                      }}
+                    >
+                      <Users className="h-3 w-3" /> Up to {svc.maxTotalPlayers}
+                    </span>
+                  )}
+                </div>
+
+                <div
+                  className="flex items-center justify-between mt-5 pt-5 border-t"
+                  style={{ borderColor: `color-mix(in srgb, ${theme.textColor} 8%, transparent)` }}
+                >
+                  {cfg.showPrice !== false && (
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: `color-mix(in srgb, ${theme.textColor} 50%, transparent)` }}>
+                        Starting at
+                      </p>
+                      <p className="font-extrabold text-2xl leading-none mt-0.5" style={{ color: theme.primaryColor }}>
+                        {formatCurrency(svc.price)}
+                      </p>
+                    </div>
+                  )}
+                  <Link href={`/book/${tenant.slug}?service=${svc._id}`}>
+                    <Button
+                      size="sm"
+                      className="group-hover:gap-2 transition-all"
+                      style={{
+                        backgroundColor: isHighlight ? theme.primaryColor : "transparent",
+                        color: isHighlight ? "#fff" : theme.primaryColor,
+                        border: isHighlight ? "none" : `1px solid ${theme.primaryColor}`,
+                        borderRadius: theme.borderRadius,
+                      }}
+                    >
+                      Book <ChevronRight className="ml-0.5 h-3 w-3" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Availability preview — beautifully arranged time-of-day strip */}
+        <AvailabilityStrip tenant={tenant} theme={theme} />
       </div>
     </section>
+  );
+}
+
+// ─── Availability Preview (time-of-day arrangement) ──────────────────────────
+
+function AvailabilityStrip({ tenant, theme }: { tenant: Tenant; theme: WebsiteConfig["theme"] }) {
+  const periods = [
+    { key: "morning", label: "Morning", icon: Sunrise, range: "6 AM – 12 PM", slots: ["8:00", "9:00", "10:00", "11:00"] },
+    { key: "afternoon", label: "Afternoon", icon: Sun, range: "12 PM – 5 PM", slots: ["12:00", "13:00", "14:00", "16:00"] },
+    { key: "evening", label: "Evening", icon: Sunset, range: "5 PM – 9 PM", slots: ["17:00", "18:00", "19:00", "20:00"] },
+    { key: "night", label: "Night", icon: Moon, range: "9 PM – 12 AM", slots: ["21:00", "22:00"] },
+  ];
+
+  return (
+    <div className="mt-16">
+      <div className="text-center mb-6">
+        <p className="text-xs font-bold uppercase tracking-wider" style={{ color: theme.primaryColor }}>
+          Today&apos;s availability
+        </p>
+        <h3 className="text-2xl font-bold tracking-tight mt-1" style={{ color: theme.textColor }}>
+          When works for you?
+        </h3>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {periods.map((p) => {
+          const Icon = p.icon;
+          return (
+            <Link
+              key={p.key}
+              href={`/book/${tenant.slug}?period=${p.key}`}
+              className="group rounded-2xl border p-5 transition-all hover:-translate-y-1 hover:shadow-lg"
+              style={{
+                borderColor: `color-mix(in srgb, ${theme.textColor} 10%, transparent)`,
+                backgroundColor: theme.backgroundColor,
+                borderRadius: theme.borderRadius,
+              }}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div
+                  className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{
+                    backgroundColor: `color-mix(in srgb, ${theme.primaryColor} 12%, transparent)`,
+                    color: theme.primaryColor,
+                  }}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-bold text-base" style={{ color: theme.textColor }}>{p.label}</p>
+                  <p className="text-[11px]" style={{ color: `color-mix(in srgb, ${theme.textColor} 55%, transparent)` }}>{p.range}</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {p.slots.map((t) => (
+                  <span
+                    key={t}
+                    className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
+                    style={{
+                      backgroundColor: `color-mix(in srgb, ${theme.primaryColor} 8%, transparent)`,
+                      color: theme.primaryColor,
+                    }}
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+              <div
+                className="mt-3 inline-flex items-center gap-1 text-xs font-bold opacity-70 group-hover:opacity-100 group-hover:gap-2 transition-all"
+                style={{ color: theme.primaryColor }}
+              >
+                See {p.label.toLowerCase()} slots <ArrowRight className="h-3 w-3" />
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
